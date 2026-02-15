@@ -1,0 +1,20 @@
+[MASTER]
+ignore=CVS,.git,.hg,.svn
+ignore-patterns=
+persistent=yes
+load-plugins=
+
+[MESSAGES CONTROL]
+disable=C0114,C0115,C0116,C0301,C0302,C0303,R0902,R0903,R0912,R0914,R0915,R0801,W0718,W0511,W1514,W1309,C0200,R1705,R1702,R1720,R1721,W0702,W0707,W0612,C0415,W1510,W0611,R1716
+
+[REPORTS]
+output-format=text
+reports=no
+score=yes
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=120
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,fp,id,f,d,v,k,e,r
