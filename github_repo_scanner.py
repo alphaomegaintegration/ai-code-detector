@@ -11,6 +11,7 @@ import re
 import sys
 import json
 import shutil
+import html
 import argparse
 import tempfile
 import subprocess
@@ -535,7 +536,7 @@ class ReportGenerator:
             top_files_html += f"""
             <tr>
                 <td>{i}</td>
-                <td class="file-path">{file['file']}</td>
+                <td class="file-path">{html.escape(str(file['file']))}</td>
                 <td style="color: {color}; font-weight: bold;">{file['ai_probability']}%</td>
                 <td>{file['confidence']}</td>
                 <td style="color: {color};">{file['verdict']}</td>
@@ -547,7 +548,7 @@ class ReportGenerator:
             for file in analysis.high_risk_files[:20]:  # Limit to 20
                 high_risk_html += f"""
                 <tr class="high-risk">
-                    <td class="file-path">{file['file']}</td>
+                    <td class="file-path">{html.escape(str(file['file']))}</td>
                     <td style="color: #dc3545; font-weight: bold;">{file['ai_probability']}%</td>
                     <td>{file['confidence']}</td>
                     <td style="color: #dc3545;">{file['verdict']}</td>
@@ -562,7 +563,7 @@ class ReportGenerator:
             width = (count / max_files) * 100
             lang_html += f"""
             <div class="lang-bar">
-                <span class="lang-name">{lang}</span>
+                <span class="lang-name">{html.escape(lang)}</span>
                 <div class="bar-container">
                     <div class="bar" style="width: {width}%"></div>
                 </div>
@@ -576,7 +577,7 @@ class ReportGenerator:
             color = get_probability_color(result['ai_probability'])
             all_files_html += f"""
             <tr>
-                <td class="file-path">{result['file_path']}</td>
+                <td class="file-path">{html.escape(str(result['file_path']))}</td>
                 <td style="color: {color}; font-weight: bold;">{result['ai_probability']}%</td>
                 <td>{result['human_probability']}%</td>
                 <td>{result['confidence']}</td>
@@ -588,7 +589,7 @@ class ReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Detection Report - {analysis.repository_url.split('/')[-1].replace('.git', '')}</title>
+    <title>AI Code Detection Report - {html.escape(analysis.repository_url.split('/')[-1].replace('.git', ''))}</title>
     <style>
         * {{
             box-sizing: border-box;
@@ -857,8 +858,8 @@ class ReportGenerator:
         <header>
             <h1>🔍 AI Code Detection Report</h1>
             <div class="meta">
-                <span>📁 Repository: <strong>{analysis.repository_url}</strong></span>
-                <span>🌿 Branch: <strong>{analysis.branch}</strong></span>
+                <span>📁 Repository: <strong>{html.escape(analysis.repository_url)}</strong></span>
+                <span>🌿 Branch: <strong>{html.escape(analysis.branch)}</strong></span>
                 <span>📅 Analyzed: <strong>{analysis.analysis_timestamp[:19].replace('T', ' ')}</strong></span>
             </div>
         </header>

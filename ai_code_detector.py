@@ -9,6 +9,7 @@ import re
 import ast
 import sys
 import json
+import html
 import argparse
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Set
@@ -1208,10 +1209,10 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                 patterns = result.detected_patterns[pattern_key][:5]
                 patterns_html += f'''
                 <div class="pattern-category">
-                    <h5>{pattern_icon} {pattern_name}</h5>
+                    <h5>{pattern_icon} {html.escape(pattern_name)}</h5>
                     <ul class="pattern-list">'''
                 for p in patterns:
-                    escaped_p = str(p).replace('<', '&lt;').replace('>', '&gt;')
+                    escaped_p = html.escape(str(p))
                     patterns_html += f'<li>{escaped_p}</li>'
                 patterns_html += '</ul></div>'
         
@@ -1221,7 +1222,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         if boolean_indicators:
             indicators_html = '<div class="indicators-list">'
             for key in boolean_indicators:
-                indicator_name = key.replace('_', ' ').title()
+                indicator_name = html.escape(key.replace('_', ' ').title())
                 indicators_html += f'<span class="indicator-badge">{indicator_name}</span>'
             indicators_html += '</div>'
         
@@ -1229,8 +1230,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         <div class="file-card" id="file-{idx}">
             <div class="file-header">
                 <div class="file-info">
-                    <h3 class="file-path">📄 {result.file_path}</h3>
-                    <span class="verdict-badge {color_class}">{result.verdict}</span>
+                    <h3 class="file-path">📄 {html.escape(str(result.file_path))}</h3>
+                    <span class="verdict-badge {color_class}">{html.escape(result.verdict)}</span>
                 </div>
                 <div class="file-summary">
                     <div class="probability-circle {color_class}">
@@ -1311,7 +1312,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
+    <title>{html.escape(title)}</title>
     <style>
         :root {{
             --bg-primary: #1a1a2e;
@@ -1786,7 +1787,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 <body>
     <div class="container">
         <header>
-            <h1>🔍 {title}</h1>
+            <h1>🔍 {html.escape(title)}</h1>
             <div class="meta">
                 <span>📅 Generated: <strong>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</strong></span>
                 <span>📁 Files: <strong>{total_files}</strong></span>
