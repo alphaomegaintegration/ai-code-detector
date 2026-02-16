@@ -1,17 +1,22 @@
+"""
+Unit tests for AICodeDetector
+"""
 import unittest
 import os
 import tempfile
-import sys
-from io import StringIO
-from ai_code_detector import AICodeDetector, DetectionResult
+from ai_code_detector import AICodeDetector
 
 class TestAICodeDetector(unittest.TestCase):
+    """Test suite for AICodeDetector class"""
+
     def setUp(self):
         # Create a temporary directory
+        # pylint: disable=consider-using-with
         self.test_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.test_dir.cleanup)
 
     def create_file(self, filename, content):
+        """Helper to create a test file"""
         path = os.path.join(self.test_dir.name, filename)
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
