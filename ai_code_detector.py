@@ -5,6 +5,7 @@ Detects AI-generated code using pattern recognition, statistical analysis, and h
 Now with sophisticated detection for AI-generated code characteristics
 """
 
+import os
 import re
 import ast
 import sys
@@ -29,7 +30,8 @@ class DetectionResult:
 
 
 class AICodeDetector:
-    def __init__(self):
+    def __init__(self, max_file_size: int = 1024 * 1024):
+        self.max_file_size = max_file_size
         self.ai_patterns = {
             'verbose_naming': r'[a-z]+[A-Z][a-z]+[A-Z][a-z]+',
             'descriptive_vars': r'(user_data|response_data|result_data|input_value|output_value)',
@@ -111,6 +113,32 @@ class AICodeDetector:
 
     def analyze_file(self, file_path: str) -> DetectionResult:
         try:
+            # Check if file exists and is a regular file
+            if not os.path.isfile(file_path):
+                return DetectionResult(
+                    file_path=file_path,
+                    ai_probability=0.0,
+                    human_probability=0.0,
+                    confidence="ERROR",
+                    indicators={"error": "File does not exist or is not a regular file"},
+                    detailed_scores={},
+                    verdict="Unable to analyze",
+                    detected_patterns={}
+                )
+
+            # Check file size before reading
+            if os.path.getsize(file_path) > self.max_file_size:
+                return DetectionResult(
+                    file_path=file_path,
+                    ai_probability=0.0,
+                    human_probability=0.0,
+                    confidence="ERROR",
+                    indicators={"error": f"File size exceeds limit of {self.max_file_size} bytes"},
+                    detailed_scores={},
+                    verdict="Unable to analyze",
+                    detected_patterns={}
+                )
+
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 code = f.read()
         except Exception as e:
@@ -1876,10 +1904,12 @@ Examples:
                        help='Generate HTML report')
     parser.add_argument('--html-output', metavar='FILE',
                        help='HTML output file path (default: analysis_report.html)')
+    parser.add_argument('--max-size', type=int, default=1,
+                       help='Maximum file size in MB (default: 1MB)')
     
     args = parser.parse_args()
     
-    detector = AICodeDetector()
+    detector = AICodeDetector(max_file_size=args.max_size * 1024 * 1024)
     files_to_analyze = []
     
     if args.directory:
