@@ -29,7 +29,8 @@ class DetectionResult:
 
 
 class AICodeDetector:
-    def __init__(self):
+    def __init__(self, max_file_size: int = 1024 * 1024):
+        self.max_file_size = max_file_size
         self.ai_patterns = {
             'verbose_naming': r'[a-z]+[A-Z][a-z]+[A-Z][a-z]+',
             'descriptive_vars': r'(user_data|response_data|result_data|input_value|output_value)',
@@ -111,8 +112,38 @@ class AICodeDetector:
 
     def analyze_file(self, file_path: str) -> DetectionResult:
         try:
+            # Security Check: Prevent Denial of Service by limiting file size
+            file_path_obj = Path(file_path)
+            if not file_path_obj.is_file():
+                raise FileNotFoundError(f"File not found: {file_path}")
+
+            file_size = file_path_obj.stat().st_size
+            if file_size > self.max_file_size:
+                return DetectionResult(
+                    file_path=file_path,
+                    ai_probability=0.0,
+                    human_probability=0.0,
+                    confidence="ERROR",
+                    indicators={"error": f"File size ({file_size} bytes) exceeds limit ({self.max_file_size} bytes)"},
+                    detailed_scores={},
+                    verdict="FILE TOO LARGE",
+                    detected_patterns={}
+                )
+
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                code = f.read()
+                # Extra layer of defense: limit the number of characters read
+                code = f.read(self.max_file_size + 1)
+                if len(code) > self.max_file_size:
+                    return DetectionResult(
+                        file_path=file_path,
+                        ai_probability=0.0,
+                        human_probability=0.0,
+                        confidence="ERROR",
+                        indicators={"error": f"File contains too many characters. Max allowed is {self.max_file_size}"},
+                        detailed_scores={},
+                        verdict="FILE TOO LARGE",
+                        detected_patterns={}
+                    )
         except Exception as e:
             return DetectionResult(
                 file_path=file_path,
@@ -1876,10 +1907,12 @@ Examples:
                        help='Generate HTML report')
     parser.add_argument('--html-output', metavar='FILE',
                        help='HTML output file path (default: analysis_report.html)')
+    parser.add_argument('--max-size', type=int, default=1024*1024,
+                       help='Maximum file size to analyze in bytes (default: 1MB)')
     
     args = parser.parse_args()
     
-    detector = AICodeDetector()
+    detector = AICodeDetector(max_file_size=args.max_size)
     files_to_analyze = []
     
     if args.directory:
