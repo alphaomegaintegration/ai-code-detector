@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=too-many-lines
 """
 GitHub Repository Scanner - AI Code Detection for Entire Repositories
 
@@ -24,6 +25,7 @@ from collections import defaultdict
 from ai_code_detector import AICodeDetector, DetectionResult
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class RepositoryAnalysis:
     """Comprehensive analysis results for a repository"""
@@ -207,6 +209,7 @@ class GitHubRepoScanner:
 
         return code_files
 
+    # pylint: disable=too-many-locals
     def _analyze_files(self, files: List[Path], repo_path: str) -> List[DetectionResult]:
         """Analyze a list of files and return results"""
         results = []
@@ -522,6 +525,7 @@ class ReportGenerator:
         print(f"JSON report saved to: {output_path}")
 
     @staticmethod
+    # pylint: disable=duplicate-code, too-many-locals, too-many-statements
     def generate_html_report(analysis: RepositoryAnalysis, output_path: str):
         """Generate a professional HTML report with visualizations"""
 

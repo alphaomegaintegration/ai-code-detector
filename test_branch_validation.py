@@ -53,7 +53,10 @@ class TestBranchValidation(unittest.TestCase):
         # We don't need to actually clone, just check validation
         # The URL must be valid to reach the branch validation check
         with self.assertRaises(ValueError) as cm:
-            self.scanner.scan_repository("https://github.com/user/repo", branch="-invalid")
+            self.scanner.scan_repository(
+                "https://github.com/user/repo",
+                branch="-invalid"
+            )
         self.assertIn("Invalid branch name", str(cm.exception))
 
 if __name__ == '__main__':
