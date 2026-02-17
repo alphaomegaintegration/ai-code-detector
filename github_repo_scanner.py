@@ -108,6 +108,26 @@ class GitHubRepoScanner:
 
         return False, normalized_url
 
+    def _validate_branch_name(self, branch: str) -> bool:
+        """Validate that the branch name is safe"""
+        if not branch:
+            return True
+
+        # Branch names cannot start with - to prevent argument injection
+        if branch.startswith('-'):
+            return False
+
+        # Allow only alphanumeric characters, forward slashes, hyphens, underscores, and dots
+        # This is restrictive but safe for most use cases
+        if not re.match(r'^[a-zA-Z0-9/_.-]+$', branch):
+            return False
+
+        # Git branch names cannot contain '..'
+        if '..' in branch:
+            return False
+
+        return True
+
     def _clone_repository(self, url: str, branch: Optional[str] = None) -> str:
         """Clone a GitHub repository to a temporary directory"""
         self.temp_dir = tempfile.mkdtemp(prefix='ai_scanner_')
@@ -308,6 +328,10 @@ class GitHubRepoScanner:
         is_valid, normalized_url = self._validate_github_url(url)
         if not is_valid:
             raise ValueError(f"Invalid GitHub repository URL: {url}")
+
+        # Validate branch name
+        if branch and not self._validate_branch_name(branch):
+            raise ValueError(f"Invalid branch name: {branch}")
 
         try:
             # Clone repository

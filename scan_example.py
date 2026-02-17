@@ -9,8 +9,12 @@ programmatically to analyze repositories for AI-generated code.
 from pathlib import Path
 
 # Import the scanner
+<<<<<<< HEAD
 from github_repo_scanner import GitHubRepoScanner
 from report_generator import ReportGenerator
+=======
+from github_repo_scanner import GitHubRepoScanner, ReportGenerator
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
 
 
 def example_scan_public_repository():
@@ -54,11 +58,19 @@ def example_scan_public_repository():
 
         # HTML report
         html_path = output_dir / "httpie_analysis.html"
+<<<<<<< HEAD
         ReportGenerator.generate_repo_html_report(analysis, str(html_path))
 
         return analysis
 
     except Exception as e: # pylint: disable=broad-exception-caught
+=======
+        ReportGenerator.generate_html_report(analysis, str(html_path))
+
+        return analysis
+
+    except Exception as e:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
         print(f"Error scanning repository: {e}")
         return None
 
@@ -102,11 +114,19 @@ def example_scan_local_directory():
 
         # HTML report
         html_path = output_dir / "local_analysis.html"
+<<<<<<< HEAD
         ReportGenerator.generate_repo_html_report(analysis, str(html_path))
 
         return analysis
 
     except Exception as e: # pylint: disable=broad-exception-caught
+=======
+        ReportGenerator.generate_html_report(analysis, str(html_path))
+
+        return analysis
+
+    except Exception as e:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
         print(f"Error scanning directory: {e}")
         return None
 
@@ -127,7 +147,11 @@ def example_custom_analysis():
     # Scan with custom extensions
     local_path = str(Path(__file__).parent)
 
+<<<<<<< HEAD
     print("Scanning Python files only, quiet mode...")
+=======
+    print(f"Scanning Python files only, quiet mode...")
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
     print("-" * 60)
 
     try:
@@ -137,27 +161,47 @@ def example_custom_analysis():
         )
 
         # Access analysis data programmatically
+<<<<<<< HEAD
         print("\n📊 Analysis Results:")
+=======
+        print(f"\n📊 Analysis Results:")
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
         print(f"   Total files: {analysis.files_analyzed}")
         print(f"   Average AI probability: {analysis.average_ai_probability}%")
         print(f"   High-risk files: {len(analysis.high_risk_files)}")
 
+<<<<<<< HEAD
         print("\n📈 Distribution:")
         for category, count in analysis.distribution.items():
             print(f"   {category}: {count} files")
 
         print("\n💻 Languages found:")
+=======
+        print(f"\n📈 Distribution:")
+        for category, count in analysis.distribution.items():
+            print(f"   {category}: {count} files")
+
+        print(f"\n💻 Languages found:")
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
         for lang, count in analysis.language_breakdown.items():
             print(f"   {lang}: {count} files")
 
         if analysis.high_risk_files:
+<<<<<<< HEAD
             print("\n⚠️  High-risk files requiring review:")
+=======
+            print(f"\n⚠️  High-risk files requiring review:")
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
             for f in analysis.high_risk_files[:5]:
                 print(f"   • {f['file']} ({f['ai_probability']}%)")
 
         return analysis
 
+<<<<<<< HEAD
     except Exception as e: # pylint: disable=broad-exception-caught
+=======
+    except Exception as e:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
         print(f"Error: {e}")
         return None
 
@@ -181,7 +225,11 @@ def main():
         try:
             result = func()
             results[name] = "Success" if result else "Failed"
+<<<<<<< HEAD
         except Exception as e: # pylint: disable=broad-exception-caught
+=======
+        except Exception as e:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
             results[name] = f"Error: {e}"
 
     # Summary

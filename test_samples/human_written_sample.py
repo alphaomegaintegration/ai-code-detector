@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 # pylint: disable=fixme, trailing-whitespace, line-too-long
+=======
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
 # quick auth system for the app
 import hashlib
 from datetime import datetime

@@ -5,7 +5,11 @@ This module provides comprehensive user authentication functionality
 including registration, login, and session management capabilities.
 """
 
+<<<<<<< HEAD
 from typing import Optional, Dict, Union
+=======
+from typing import Optional, Dict, List, Union
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
 import hashlib
 import secrets
 from datetime import datetime, timedelta
@@ -81,7 +85,11 @@ class UserAuthenticationManager:
                 "success": False,
                 "message": f"Registration failed: {str(validation_error)}"
             }
+<<<<<<< HEAD
         except Exception as unexpected_error: # pylint: disable=broad-exception-caught
+=======
+        except Exception as unexpected_error:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
             return {
                 "success": False,
                 "message": f"Unexpected error occurred: {str(unexpected_error)}"
@@ -136,7 +144,11 @@ class UserAuthenticationManager:
                 "session_token": session_token
             }
 
+<<<<<<< HEAD
         except Exception as authentication_error: # pylint: disable=broad-exception-caught
+=======
+        except Exception as authentication_error:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
             return {
                 "authenticated": False,
                 "message": f"Authentication error: {str(authentication_error)}",
@@ -166,7 +178,11 @@ class UserAuthenticationManager:
 
             return True
 
+<<<<<<< HEAD
         except Exception: # pylint: disable=broad-exception-caught, unused-variable
+=======
+        except Exception as validation_error:
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
             return False
 
     def _hash_password_securely(self, password: str) -> str:

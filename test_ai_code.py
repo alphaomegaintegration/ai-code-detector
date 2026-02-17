@@ -93,7 +93,10 @@ def calculate_user_score(scores: List[int]) -> float:
     total = 0
 
     # Loop through the scores
+<<<<<<< HEAD
     # pylint: disable=consider-using-enumerate
+=======
+>>>>>>> remotes/origin/sentinel-fix-git-branch-injection-14962938762884618886
     for i in range(len(scores)):
         # Increment the total
         total = total + scores[i]
