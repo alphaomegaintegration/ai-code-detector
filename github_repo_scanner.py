@@ -146,19 +146,19 @@ class GitHubRepoScanner:
                 clone_cmd,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
+                check=False
             )
 
             if result.returncode != 0:
                 error_msg = result.stderr.strip()
                 if 'not found' in error_msg.lower():
                     raise ValueError(f"Repository not found: {url}")
-                elif 'could not find remote branch' in error_msg.lower():
+                if 'could not find remote branch' in error_msg.lower():
                     raise ValueError(f"Branch not found: {branch}")
-                else:
-                    raise RuntimeError(f"Git clone failed: {error_msg}")
+                raise RuntimeError(f"Git clone failed: {error_msg}")
 
-            self._log(f"Repository cloned successfully")
+            self._log("Repository cloned successfully")
             return self.temp_dir
 
         except subprocess.TimeoutExpired:
@@ -172,7 +172,8 @@ class GitHubRepoScanner:
                 ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                 capture_output=True,
                 text=True,
-                cwd=repo_path
+                cwd=repo_path,
+                check=False
             )
             return result.stdout.strip() if result.returncode == 0 else 'main'
         except:
@@ -186,7 +187,11 @@ class GitHubRepoScanner:
                 ext_to_lang[ext] = lang
         return ext_to_lang
 
-    def _find_code_files(self, repo_path: str, extensions: Optional[List[str]] = None) -> List[Path]:
+    def _find_code_files(
+        self,
+        repo_path: str,
+        extensions: Optional[List[str]] = None
+    ) -> List[Path]:
         """Find all code files in the repository"""
         if extensions is None:
             extensions = []
@@ -283,7 +288,11 @@ class GitHubRepoScanner:
 
         return dict(sorted(breakdown.items(), key=lambda x: x[1], reverse=True))
 
-    def _get_top_ai_files(self, results: List[DetectionResult], n: int = 10) -> List[Dict[str, Any]]:
+    def _get_top_ai_files(
+        self,
+        results: List[DetectionResult],
+        n: int = 10
+    ) -> List[Dict[str, Any]]:
         """Get the top N files most likely to be AI-generated"""
         sorted_results = sorted(results, key=lambda x: x.ai_probability, reverse=True)
 
@@ -370,7 +379,10 @@ class GitHubRepoScanner:
 
             # Calculate statistics
             valid_results = [r for r in results if r.confidence != 'ERROR']
-            avg_probability = sum(r.ai_probability for r in valid_results) / len(valid_results) if valid_results else 0
+            avg_probability = (
+                sum(r.ai_probability for r in valid_results) / len(valid_results)
+                if valid_results else 0
+            )
 
             # Calculate distribution
             distribution = self._calculate_distribution(valid_results)
@@ -428,7 +440,11 @@ class GitHubRepoScanner:
         finally:
             self._cleanup()
 
-    def scan_local_directory(self, path: str, extensions: Optional[List[str]] = None) -> RepositoryAnalysis:
+    def scan_local_directory(
+        self,
+        path: str,
+        extensions: Optional[List[str]] = None
+    ) -> RepositoryAnalysis:
         """
         Scan a local directory for AI-generated code
 
@@ -471,7 +487,10 @@ class GitHubRepoScanner:
 
         # Calculate statistics (same as scan_repository)
         valid_results = [r for r in results if r.confidence != 'ERROR']
-        avg_probability = sum(r.ai_probability for r in valid_results) / len(valid_results) if valid_results else 0
+        avg_probability = (
+            sum(r.ai_probability for r in valid_results) / len(valid_results)
+            if valid_results else 0
+        )
 
         distribution = self._calculate_distribution(valid_results)
         high_risk_files = self._find_high_risk_files(valid_results)
@@ -534,17 +553,6 @@ class ReportGenerator:
         dist_percentages = {k: (v / total) * 100 for k, v in analysis.distribution.items()}
 
         # Color coding for verdict
-        def get_verdict_color(verdict):
-            if 'LIKELY AI' in verdict:
-                return '#dc3545'  # Red
-            if 'POSSIBLY AI' in verdict:
-                return '#fd7e14'  # Orange
-            if 'MIXED' in verdict:
-                return '#ffc107'  # Yellow
-            if 'HUMAN' in verdict:
-                return '#28a745'  # Green
-            return '#6c757d'  # Gray
-
         def get_probability_color(prob):
             if prob >= 75:
                 return '#dc3545'  # Red
@@ -574,16 +582,20 @@ class ReportGenerator:
                 high_risk_html += f"""
                 <tr class="high-risk">
                     <td class="file-path">{file['file']}</td>
-                    <td style="color: #dc3545; font-weight: bold;">{file['ai_probability']}%</td>
+                    <td style="color: #dc3545; font-weight: bold;">
+                        {file['ai_probability']}%
+                    </td>
                     <td>{file['confidence']}</td>
                     <td style="color: #dc3545;">{file['verdict']}</td>
                 </tr>"""
         else:
-            high_risk_html = '<tr><td colspan="4" style="text-align: center; color: #28a745;">No high-risk files detected!</td></tr>'
+            high_risk_html = ('<tr><td colspan="4" style="text-align: center; color: #28a745;">'
+                              'No high-risk files detected!</td></tr>')
 
         # Generate language breakdown HTML
         lang_html = ""
-        max_files = max(analysis.language_breakdown.values()) if analysis.language_breakdown else 1
+        max_files = max(analysis.language_breakdown.values()) \
+            if analysis.language_breakdown else 1
         for lang, count in analysis.language_breakdown.items():
             width = (count / max_files) * 100
             lang_html += f"""
@@ -597,7 +609,9 @@ class ReportGenerator:
 
         # Generate all files table
         all_files_html = ""
-        sorted_results = sorted(analysis.file_results, key=lambda x: x['ai_probability'], reverse=True)
+        sorted_results = sorted(analysis.file_results,
+                              key=lambda x: x['ai_probability'],
+                              reverse=True)
         for result in sorted_results:
             color = get_probability_color(result['ai_probability'])
             all_files_html += f"""
@@ -609,12 +623,44 @@ class ReportGenerator:
                 <td style="color: {color};">{result['verdict']}</td>
             </tr>"""
 
+        repo_name = analysis.repository_url.split('/')[-1].replace('.git', '')
+        analysis_time = analysis.analysis_timestamp[:19].replace('T', ' ')
+        avg_prob_color = (
+            'red' if analysis.average_ai_probability >= 60
+            else 'orange' if analysis.average_ai_probability >= 40
+            else 'green'
+        )
+        high_risk_color = (
+            'red' if len(analysis.high_risk_files) > 5
+            else 'orange' if len(analysis.high_risk_files) > 0
+            else 'green'
+        )
+
+        # Helper for dictionary lookups in f-strings to avoid line length issues
+        d_human = analysis.distribution.get('likely_human (0-35%)', 0)
+        d_mixed = analysis.distribution.get('mixed (35-55%)', 0)
+        d_poss = analysis.distribution.get('possibly_ai (55-75%)', 0)
+        d_ai = analysis.distribution.get('likely_ai (75-100%)', 0)
+
+        dp_human = dist_percentages.get('likely_human (0-35%)', 0)
+        dp_mixed = dist_percentages.get('mixed (35-55%)', 0)
+        dp_poss = dist_percentages.get('possibly_ai (55-75%)', 0)
+        dp_ai = dist_percentages.get('likely_ai (75-100%)', 0)
+
+        v_ai = analysis.summary.get('verdict_summary', {}).get('likely_ai', 0)
+        v_poss = analysis.summary.get('verdict_summary', {}).get('possibly_ai', 0)
+        v_mixed = analysis.summary.get('verdict_summary', {}).get('mixed', 0)
+        v_human = analysis.summary.get('verdict_summary', {}).get('likely_human', 0)
+        v_inc = analysis.summary.get('verdict_summary', {}).get('inconclusive', 0)
+
+        no_files_row = '<tr><td colspan="5" style="text-align:center">No files analyzed</td></tr>'
+
         html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Detection Report - {analysis.repository_url.split('/')[-1].replace('.git', '')}</title>
+    <title>AI Code Detection Report - {repo_name}</title>
     <style>
         * {{
             box-sizing: border-box;
@@ -623,7 +669,8 @@ class ReportGenerator:
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                         Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #e0e0e0;
             min-height: 100vh;
@@ -885,7 +932,7 @@ class ReportGenerator:
             <div class="meta">
                 <span>📁 Repository: <strong>{analysis.repository_url}</strong></span>
                 <span>🌿 Branch: <strong>{analysis.branch}</strong></span>
-                <span>📅 Analyzed: <strong>{analysis.analysis_timestamp[:19].replace('T', ' ')}</strong></span>
+                <span>📅 Analyzed: <strong>{analysis_time}</strong></span>
             </div>
         </header>
 
@@ -896,11 +943,11 @@ class ReportGenerator:
             </div>
             <div class="stat-card">
                 <h3>Average AI Probability</h3>
-                <div class="stat-value {'red' if analysis.average_ai_probability >= 60 else 'orange' if analysis.average_ai_probability >= 40 else 'green'}">{analysis.average_ai_probability}%</div>
+                <div class="stat-value {avg_prob_color}">{analysis.average_ai_probability}%</div>
             </div>
             <div class="stat-card">
                 <h3>High Risk Files</h3>
-                <div class="stat-value {'red' if len(analysis.high_risk_files) > 5 else 'orange' if len(analysis.high_risk_files) > 0 else 'green'}">{len(analysis.high_risk_files)}</div>
+                <div class="stat-value {high_risk_color}">{len(analysis.high_risk_files)}</div>
             </div>
             <div class="stat-card">
                 <h3>Languages Detected</h3>
@@ -911,16 +958,28 @@ class ReportGenerator:
         <section>
             <h2>📊 AI Probability Distribution</h2>
             <div class="distribution-chart">
-                <div class="dist-segment green" style="flex: {dist_percentages.get('likely_human (0-35%)', 0)}">{analysis.distribution.get('likely_human (0-35%)', 0)}</div>
-                <div class="dist-segment yellow" style="flex: {dist_percentages.get('mixed (35-55%)', 0)}">{analysis.distribution.get('mixed (35-55%)', 0)}</div>
-                <div class="dist-segment orange" style="flex: {dist_percentages.get('possibly_ai (55-75%)', 0)}">{analysis.distribution.get('possibly_ai (55-75%)', 0)}</div>
-                <div class="dist-segment red" style="flex: {dist_percentages.get('likely_ai (75-100%)', 0)}">{analysis.distribution.get('likely_ai (75-100%)', 0)}</div>
+                <div class="dist-segment green" style="flex: {dp_human}">{d_human}</div>
+                <div class="dist-segment yellow" style="flex: {dp_mixed}">{d_mixed}</div>
+                <div class="dist-segment orange" style="flex: {dp_poss}">{d_poss}</div>
+                <div class="dist-segment red" style="flex: {dp_ai}">{d_ai}</div>
             </div>
             <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background:#28a745"></div> Likely Human (0-35%): {analysis.distribution.get('likely_human (0-35%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#ffc107"></div> Mixed (35-55%): {analysis.distribution.get('mixed (35-55%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#fd7e14"></div> Possibly AI (55-75%): {analysis.distribution.get('possibly_ai (55-75%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#dc3545"></div> Likely AI (75-100%): {analysis.distribution.get('likely_ai (75-100%)', 0)} files</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#28a745"></div>
+                    Likely Human (0-35%): {d_human} files
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#ffc107"></div>
+                    Mixed (35-55%): {d_mixed} files
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#fd7e14"></div>
+                    Possibly AI (55-75%): {d_poss} files
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#dc3545"></div>
+                    Likely AI (75-100%): {d_ai} files
+                </div>
             </div>
         </section>
 
@@ -928,23 +987,23 @@ class ReportGenerator:
             <h2>📈 Verdict Summary</h2>
             <div class="verdict-summary">
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#dc3545">{analysis.summary.get('verdict_summary', {}).get('likely_ai', 0)}</div>
+                    <div class="verdict-count" style="color:#dc3545">{v_ai}</div>
                     <div class="verdict-label">Likely AI-Generated</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#fd7e14">{analysis.summary.get('verdict_summary', {}).get('possibly_ai', 0)}</div>
+                    <div class="verdict-count" style="color:#fd7e14">{v_poss}</div>
                     <div class="verdict-label">Possibly AI-Assisted</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#ffc107">{analysis.summary.get('verdict_summary', {}).get('mixed', 0)}</div>
+                    <div class="verdict-count" style="color:#ffc107">{v_mixed}</div>
                     <div class="verdict-label">Mixed Indicators</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#28a745">{analysis.summary.get('verdict_summary', {}).get('likely_human', 0)}</div>
+                    <div class="verdict-count" style="color:#28a745">{v_human}</div>
                     <div class="verdict-label">Likely Human-Written</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#6c757d">{analysis.summary.get('verdict_summary', {}).get('inconclusive', 0)}</div>
+                    <div class="verdict-count" style="color:#6c757d">{v_inc}</div>
                     <div class="verdict-label">Inconclusive</div>
                 </div>
             </div>
@@ -969,7 +1028,7 @@ class ReportGenerator:
                         </tr>
                     </thead>
                     <tbody>
-                        {top_files_html if top_files_html else '<tr><td colspan="5" style="text-align:center">No files analyzed</td></tr>'}
+                        {top_files_html if top_files_html else no_files_row}
                     </tbody>
                 </table>
             </div>
@@ -1008,7 +1067,7 @@ class ReportGenerator:
                         </tr>
                     </thead>
                     <tbody>
-                        {all_files_html if all_files_html else '<tr><td colspan="5" style="text-align:center">No files analyzed</td></tr>'}
+                        {all_files_html if all_files_html else no_files_row}
                     </tbody>
                 </table>
             </div>
@@ -1106,7 +1165,10 @@ Examples:
     parser.add_argument('-o', '--output-dir', default='.',
                        help='Output directory for reports (default: current directory)')
     parser.add_argument('--local', metavar='PATH', help='Scan a local directory instead of GitHub')
-    parser.add_argument('--extensions', help='Comma-separated list of file extensions to analyze (e.g., .py,.js)')
+    parser.add_argument(
+        '--extensions',
+        help='Comma-separated list of file extensions to analyze (e.g., .py,.js)'
+    )
     parser.add_argument('--json-only', action='store_true', help='Generate only JSON report')
     parser.add_argument('--html-only', action='store_true', help='Generate only HTML report')
     parser.add_argument('-q', '--quiet', action='store_true', help='Suppress progress output')
@@ -1115,7 +1177,9 @@ Examples:
 
     # Validate arguments
     if not args.url and not args.local:
-        parser.error("Please provide either a GitHub URL or use --local for local directory scanning")
+        parser.error(
+            "Please provide either a GitHub URL or use --local for local directory scanning"
+        )
 
     # Parse extensions
     extensions = None

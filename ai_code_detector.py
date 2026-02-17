@@ -14,10 +14,13 @@ from pathlib import Path
 from typing import Dict, List, Any
 from collections import Counter
 from dataclasses import dataclass, asdict, field
+from datetime import datetime
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class DetectionResult:
+    """Result of AI code detection analysis"""
     file_path: str
     ai_probability: float
     human_probability: float
@@ -30,18 +33,31 @@ class DetectionResult:
 
 # pylint: disable=too-many-instance-attributes
 class AICodeDetector:
+    """Main detector class for analyzing code"""
+
     def __init__(self):
         self.ai_patterns = {
             'verbose_naming': r'[a-z]+[A-Z][a-z]+[A-Z][a-z]+',
-            'descriptive_vars': r'(user_data|response_data|result_data|input_value|output_value)',
+            'descriptive_vars': (
+                r'(user_data|response_data|result_data|input_value|output_value)'
+            ),
             'formal_comments': r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')',
-            'type_hints': r':\s*(str|int|float|bool|List|Dict|Tuple|Optional|Union)',
+            'type_hints': (
+                r':\s*(str|int|float|bool|List|Dict|Tuple|Optional|Union)'
+            ),
         }
 
         self.human_patterns = {
-            'abbreviated_vars': r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b',
-            'legacy_syntax': r'(var\s+|function\s*\(|\.prototype\.|document\.write)',
-            'informal_comments': r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)',
+            'abbreviated_vars': (
+                r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b'
+            ),
+            'legacy_syntax': (
+                r'(var\s+|function\s*\(|\.prototype\.|document\.write)'
+            ),
+            'informal_comments': (
+                r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|'
+                r'//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)'
+            ),
         }
 
         # AI-typical comment phrases (over-explanation patterns)
@@ -100,18 +116,25 @@ class AICodeDetector:
 
         # Textbook algorithm patterns
         self.textbook_patterns = [
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)', 'range(len()) instead of enumerate'),
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)', 'Bubble sort pattern'),
+            (
+                r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)',
+                'range(len()) instead of enumerate'
+            ),
+            (
+                r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)',
+                'Bubble sort pattern'
+            ),
             (r'if\s+\w+\s*==\s*True', 'Explicit True comparison'),
             (r'if\s+\w+\s*==\s*False', 'Explicit False comparison'),
             (r'if\s+len\s*\(\s*\w+\s*\)\s*==\s*0', 'len() == 0 instead of not'),
             (r'if\s+len\s*\(\s*\w+\s*\)\s*>\s*0', 'len() > 0 instead of truthiness'),
             (r'(\w+)\s*=\s*\1\s*\+\s*1', 'i = i + 1 instead of i += 1'),
-            (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]', 'Adjacent element comparison (bubble sort)'),
+            (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]', 'Bubble sort comparison'),
         ]
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, broad-exception-caught
     def analyze_file(self, file_path: str) -> DetectionResult:
+        """Analyze a single file for AI-generated patterns"""
         try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 code = f.read()
@@ -215,14 +238,20 @@ class AICodeDetector:
 
     # pylint: disable=too-many-locals
     def _analyze_naming_patterns(self, code: str) -> Dict[str, Any]:
-        lines = [l for l in code.split('\n') if l.strip() and not l.strip().startswith('#')]
+        lines = [l for l in code.split('\n')
+                 if l.strip() and not l.strip().startswith('#')]
 
         verbose_matches = len(re.findall(self.ai_patterns['verbose_naming'], code))
         descriptive_matches = len(re.findall(self.ai_patterns['descriptive_vars'], code))
-        abbreviated_matches = len(re.findall(self.human_patterns['abbreviated_vars'], code))
+        abbreviated_matches = len(re.findall(
+            self.human_patterns['abbreviated_vars'], code
+        ))
 
         identifiers = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', code)
-        avg_identifier_length = sum(len(i) for i in identifiers) / max(len(identifiers), 1)
+        if identifiers:
+            avg_identifier_length = sum(len(i) for i in identifiers) / len(identifiers)
+        else:
+            avg_identifier_length = 0
 
         ai_score = 0.0
         if avg_identifier_length > 12:
@@ -249,15 +278,21 @@ class AICodeDetector:
 
     def _analyze_comment_style(self, code: str) -> Dict[str, Any]:
         lines = code.split('\n')
-        comment_lines = [l for l in lines if l.strip().startswith('#') or l.strip().startswith('//')]
+        comment_lines = [l for l in lines
+                        if l.strip().startswith('#') or l.strip().startswith('//')]
 
         formal_comments = len(re.findall(self.ai_patterns['formal_comments'], code))
-        informal_comments = len(re.findall(self.human_patterns['informal_comments'], code))
+        informal_comments = len(re.findall(
+            self.human_patterns['informal_comments'], code
+        ))
 
         code_lines = [l for l in lines if l.strip() and not l.strip().startswith('#')]
         comment_ratio = len(comment_lines) / max(len(code_lines), 1)
 
-        avg_comment_length = sum(len(c) for c in comment_lines) / max(len(comment_lines), 1) if comment_lines else 0
+        avg_comment_length = (
+            sum(len(c) for c in comment_lines) / len(comment_lines)
+            if comment_lines else 0
+        )
 
         ai_score = 0.0
         if comment_ratio > 0.3:
@@ -293,7 +328,8 @@ class AICodeDetector:
             indent_counter = Counter([i % 4 for i in indentation_levels if i > 0])
             if indent_counter:
                 most_common = indent_counter.most_common(1)[0][1]
-                indent_consistency = most_common / len([i for i in indentation_levels if i > 0])
+                count = len([i for i in indentation_levels if i > 0])
+                indent_consistency = most_common / count if count > 0 else 0
 
         blank_lines = code.count('\n\n')
         blank_line_ratio = blank_lines / max(len(lines), 1)
@@ -344,10 +380,15 @@ class AICodeDetector:
     def _analyze_error_handling(self, code: str) -> Dict[str, Any]:
         try_blocks = len(re.findall(r'\btry\s*:', code))
         except_blocks = len(re.findall(r'\bexcept\s+', code))
-        null_checks = len(re.findall(r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)', code, re.IGNORECASE))
+        null_checks = len(re.findall(
+            r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)',
+            code, re.IGNORECASE
+        ))
 
         lines = [l for l in code.split('\n') if l.strip()]
-        error_handling_ratio = (try_blocks + except_blocks + null_checks) / max(len(lines), 1)
+        error_handling_ratio = (
+            (try_blocks + except_blocks + null_checks) / max(len(lines), 1)
+        )
 
         ai_score = 0.0
         if error_handling_ratio > 0.1:
@@ -376,7 +417,10 @@ class AICodeDetector:
 
         documented_ratio = len(docstrings) / max(function_defs + class_defs, 1)
 
-        avg_docstring_length = sum(len(d) for d in docstrings) / max(len(docstrings), 1) if docstrings else 0
+        avg_docstring_length = (
+            sum(len(d) for d in docstrings) / len(docstrings)
+            if docstrings else 0
+        )
 
         ai_score = 0.0
         if documented_ratio > 0.7:
@@ -399,13 +443,6 @@ class AICodeDetector:
         }
 
     def _analyze_formatting(self, code: str) -> Dict[str, Any]:
-        lines = [l for l in code.split('\n') if l.strip()]
-
-        spacing_patterns = []
-        for line in lines:
-            if '=' in line and 'def' not in line and 'class' not in line:
-                spacing_patterns.append('=' in line.replace('==', '').replace('!=', ''))
-
         operator_spacing = len(re.findall(r'\s[+\-*/=]\s', code))
         total_operators = len(re.findall(r'[+\-*/=]', code))
         spacing_consistency = operator_spacing / max(total_operators, 1)
@@ -438,7 +475,9 @@ class AICodeDetector:
         legacy_features += len(re.findall(r'%\s*[sd]', code))
 
         total_features = modern_features + legacy_features
-        modern_ratio = modern_features / max(total_features, 1) if total_features > 0 else 0.5
+        modern_ratio = (
+            modern_features / total_features if total_features > 0 else 0.5
+        )
 
         ai_score = modern_ratio
 
@@ -454,7 +493,8 @@ class AICodeDetector:
     def _analyze_enhanced_comments(self, code: str) -> Dict[str, Any]:
         """Enhanced comment analysis for AI-typical patterns."""
         lines = code.split('\n')
-        comment_lines = [l.strip() for l in lines if l.strip().startswith('#') or l.strip().startswith('//')]
+        comment_lines = [l.strip() for l in lines
+                        if l.strip().startswith('#') or l.strip().startswith('//')]
 
         ai_phrases_found = []
         obvious_comments_found = []
@@ -520,11 +560,12 @@ class AICodeDetector:
         type_checks = re.findall(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)', code)
         type_check_count = len(type_checks)
         if type_check_count > 3:
-            patterns_found.append(f"Excessive type checks: {type_check_count} isinstance calls")
+            patterns_found.append(
+                f"Excessive type checks: {type_check_count} isinstance calls"
+            )
 
         # Over-use of try-catch
         try_blocks = len(re.findall(r'\btry\s*:', code))
-        simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code))
         if try_blocks > 3:
             patterns_found.append(f"Many try blocks: {try_blocks}")
 
@@ -543,11 +584,18 @@ class AICodeDetector:
 
         # Input validation patterns
         validation_patterns = len(re.findall(r'if\s+not\s+\w+\s*:', code))
-        validation_patterns += len(re.findall(r'if\s+\w+\s+is\s+None\s*:', code))
-        validation_patterns += len(re.findall(r'raise\s+(ValueError|TypeError|RuntimeError)', code))
+        validation_patterns += len(
+            re.findall(r'if\s+\w+\s+is\s+None\s*:', code)
+        )
+        validation_patterns += len(
+            re.findall(r'raise\s+(ValueError|TypeError|RuntimeError)', code)
+        )
 
         lines = [l for l in code.split('\n') if l.strip()]
-        defensive_ratio = (none_check_count + type_check_count + try_blocks + validation_patterns) / max(len(lines), 1)
+        defensive_ratio = (
+            (none_check_count + type_check_count + try_blocks + validation_patterns)
+            / max(len(lines), 1)
+        )
 
         ai_score = 0.0
         if defensive_ratio > 0.15:
@@ -601,10 +649,14 @@ class AICodeDetector:
             patterns_found.append("String concatenation in loop")
 
         # Manual list building instead of comprehension
-        append_in_loop = len(re.findall(r'for\s+.+:\s*\n\s+\w+\.append\(', code, re.MULTILINE))
+        append_in_loop = len(
+            re.findall(r'for\s+.+:\s*\n\s+\w+\.append\(', code, re.MULTILINE)
+        )
         if append_in_loop > 2:
             verbose_indicators += append_in_loop
-            patterns_found.append(f"Append in loop ({append_in_loop}x) instead of comprehension")
+            patterns_found.append(
+                f"Append in loop ({append_in_loop}x) instead of comprehension"
+            )
 
         lines = len([l for l in code.split('\n') if l.strip()])
         textbook_ratio = textbook_count / max(lines, 1)
@@ -659,7 +711,11 @@ class AICodeDetector:
 
             func_body_lines = lines[start_line:end_line]
             # Count non-empty, non-comment lines (excluding the def line itself)
-            func_lines = [l for l in func_body_lines[1:] if l.strip() and not l.strip().startswith('#') and not l.strip().startswith('"""') and not l.strip().startswith("'''")]
+            func_lines = [
+                l for l in func_body_lines[1:]
+                if l.strip() and not l.strip().startswith('#') and
+                not l.strip().startswith('"""') and not l.strip().startswith("'''")
+            ]
             func_size = len(func_lines)
             function_sizes.append(func_size)
 
@@ -671,12 +727,15 @@ class AICodeDetector:
         small_func_ratio = small_func_count / max(total_functions, 1)
 
         # Check for helper function naming patterns
-        helper_patterns = ['_helper', '_util', '_process', '_handle', '_validate', '_check', '_get', '_set', '_create']
-        helper_count = sum(1 for m in func_matches if any(p in m.group(1).lower() for p in helper_patterns))
+        helper_patterns = [
+            '_helper', '_util', '_process', '_handle', '_validate',
+            '_check', '_get', '_set', '_create'
+        ]
+        helper_count = sum(
+            1 for m in func_matches
+            if any(p in m.group(1).lower() for p in helper_patterns)
+        )
         helper_ratio = helper_count / max(total_functions, 1)
-
-        # Check for similar function patterns (repetitive structure)
-        # func_signatures = [m.group(0) for m in func_matches]
 
         ai_score = 0.0
         if small_func_ratio > 0.5 and total_functions > 3:
@@ -691,6 +750,10 @@ class AICodeDetector:
 
         ai_score = max(0.0, min(1.0, ai_score))
 
+        avg_size = (
+            sum(function_sizes) / len(function_sizes) if function_sizes else 0
+        )
+
         return {
             'scores': {
                 'ai_indicators': ai_score,
@@ -699,7 +762,7 @@ class AICodeDetector:
                 'small_function_ratio': round(small_func_ratio, 3),
                 'helper_function_count': helper_count,
                 'helper_ratio': round(helper_ratio, 3),
-                'avg_function_size': round(sum(function_sizes) / max(len(function_sizes), 1), 1)
+                'avg_function_size': round(avg_size, 1)
             },
             'small_functions': small_functions[:10]
         }
@@ -707,14 +770,12 @@ class AICodeDetector:
     # pylint: disable=too-many-locals
     def _analyze_enhanced_consistency(self, code: str) -> Dict[str, Any]:
         """Detect perfect consistency that's unnatural for humans."""
-        lines = [l for l in code.split('\n') if l.strip()]
-
         # Check naming consistency
         snake_case = len(re.findall(r'\b[a-z]+_[a-z]+\b', code))
         camel_case = len(re.findall(r'\b[a-z]+[A-Z][a-z]+\b', code))
         total_naming = snake_case + camel_case
         if total_naming > 5:
-            naming_consistency = max(snake_case, camel_case) / max(total_naming, 1)
+            naming_consistency = max(snake_case, camel_case) / total_naming
         else:
             naming_consistency = 0.5
 
@@ -723,7 +784,7 @@ class AICodeDetector:
         unspaced_ops = len(re.findall(r'[a-zA-Z0-9][=+\-*/][a-zA-Z0-9]', code))
         total_ops = spaced_ops + unspaced_ops
         if total_ops > 3:
-            spacing_consistency = spaced_ops / max(total_ops, 1)
+            spacing_consistency = spaced_ops / total_ops
         else:
             spacing_consistency = 0.5
 
@@ -732,7 +793,7 @@ class AICodeDetector:
         slash_comments = len(re.findall(r'^\s*//', code, re.MULTILINE))
         total_comments = hash_comments + slash_comments
         if total_comments > 2:
-            comment_style_consistency = max(hash_comments, slash_comments) / max(total_comments, 1)
+            comment_style_consistency = max(hash_comments, slash_comments) / total_comments
         else:
             comment_style_consistency = 0.5
 
@@ -742,7 +803,7 @@ class AICodeDetector:
         indent_tab = len(re.findall(r'^\t[^\t]', code, re.MULTILINE))
         total_indent = indent_4 + indent_2 + indent_tab
         if total_indent > 3:
-            indent_consistency = max(indent_4, indent_2, indent_tab) / max(total_indent, 1)
+            indent_consistency = max(indent_4, indent_2, indent_tab) / total_indent
         else:
             indent_consistency = 0.5
 
@@ -784,23 +845,33 @@ class AICodeDetector:
         missing_quirks = []
 
         # Check for absence of TODO, FIXME, HACK, NOTE, XXX
-        has_todo = bool(re.search(r'(#|//)\s*(TODO|FIXME|HACK|NOTE|XXX)', code, re.IGNORECASE))
+        has_todo = bool(
+            re.search(r'(#|//)\s*(TODO|FIXME|HACK|NOTE|XXX)', code, re.IGNORECASE)
+        )
         if not has_todo:
             missing_quirks.append("No TODO/FIXME/HACK/NOTE/XXX comments")
 
         # Check for absence of temp variable names
-        has_temp_vars = bool(re.search(r'\b(tmp|temp|foo|bar|baz|xxx|yyy|zzz)\b', code))
+        has_temp_vars = bool(
+            re.search(r'\b(tmp|temp|foo|bar|baz|xxx|yyy|zzz)\b', code)
+        )
         if not has_temp_vars:
             missing_quirks.append("No temporary variable names (tmp, temp, foo, bar)")
 
         # Check for absence of debugging artifacts
-        has_debug = bool(re.search(r'(console\.log|print\s*\(|debugger|System\.out\.print)', code))
+        has_debug = bool(
+            re.search(r'(console\.log|print\s*\(|debugger|System\.out\.print)', code)
+        )
         if not has_debug:
             missing_quirks.append("No debugging statements (print, console.log)")
 
         # Check for absence of commented-out code
-        commented_code = re.findall(r'#\s*(if|for|while|def|class|return|import)\s', code)
-        commented_code += re.findall(r'//\s*(if|for|while|function|class|return|import)\s', code)
+        commented_code = re.findall(
+            r'#\s*(if|for|while|def|class|return|import)\s', code
+        )
+        commented_code += re.findall(
+            r'//\s*(if|for|while|function|class|return|import)\s', code
+        )
         if not commented_code:
             missing_quirks.append("No commented-out code")
 
@@ -810,7 +881,9 @@ class AICodeDetector:
             missing_quirks.append("No magic numbers with inline comments")
 
         # Check for presence of abbreviations
-        has_abbrevs = bool(re.search(r'\b(cfg|ctx|env|msg|req|res|db|api|btn|img|err|fmt)\b', code))
+        has_abbrevs = bool(
+            re.search(r'\b(cfg|ctx|env|msg|req|res|db|api|btn|img|err|fmt)\b', code)
+        )
         if not has_abbrevs:
             missing_quirks.append("No common abbreviations (cfg, ctx, env, msg, etc.)")
 
@@ -852,17 +925,25 @@ class AICodeDetector:
 
         # Check indentation perfection (all 4-space aligned)
         indented_lines = [l for l in non_empty_lines if len(l) - len(l.lstrip()) > 0]
-        perfect_indent = sum(1 for l in indented_lines if (len(l) - len(l.lstrip())) % 4 == 0)
-        indent_perfection = perfect_indent / max(len(indented_lines), 1)
+        perfect_indent = sum(
+            1 for l in indented_lines if (len(l) - len(l.lstrip())) % 4 == 0
+        )
+        indent_perfection = (
+            perfect_indent / len(indented_lines) if indented_lines else 1.0
+        )
 
         # Check line length consistency
         line_lengths = [len(l.rstrip()) for l in non_empty_lines]
         if line_lengths:
             avg_length = sum(line_lengths) / len(line_lengths)
-            length_variance = sum((l - avg_length) ** 2 for l in line_lengths) / len(line_lengths)
+            length_variance = (
+                sum((l - avg_length) ** 2 for l in line_lengths) / len(line_lengths)
+            )
             length_std = length_variance ** 0.5
             # Low std dev indicates very consistent line lengths
-            length_consistency = 1.0 if length_std < 15 else (1.0 - min(length_std / 50, 1.0))
+            length_consistency = (
+                1.0 if length_std < 15 else (1.0 - min(length_std / 50, 1.0))
+            )
         else:
             length_consistency = 0.5
 
@@ -873,14 +954,21 @@ class AICodeDetector:
         # Check blank line patterns (consistent separation)
         blank_lines = [i for i, l in enumerate(lines) if not l.strip()]
         if len(blank_lines) > 2:
-            blank_gaps = [blank_lines[i+1] - blank_lines[i] for i in range(len(blank_lines)-1)]
+            blank_gaps = [
+                blank_lines[i+1] - blank_lines[i]
+                for i in range(len(blank_lines)-1)
+            ]
             if blank_gaps:
                 gap_mean = sum(blank_gaps) / len(blank_gaps)
-                gap_variance = sum((g - gap_mean)**2 for g in blank_gaps) / len(blank_gaps)
+                gap_variance = (
+                    sum((g - gap_mean)**2 for g in blank_gaps) / len(blank_gaps)
+                )
             else:
                 gap_variance = 0
 
-            blank_line_regularity = 1.0 if gap_variance < 5 else (1.0 - min(gap_variance / 20, 1.0))
+            blank_line_regularity = (
+                1.0 if gap_variance < 5 else (1.0 - min(gap_variance / 20, 1.0))
+            )
         else:
             blank_line_regularity = 0.5
 
@@ -957,7 +1045,9 @@ class AICodeDetector:
                 for pattern, description in obvious_patterns:
                     if re.search(pattern, comment_text):
                         obvious_count += 1
-                        obvious_examples.append(f"[Line {i+1}] {description}: {stripped[:70]}")
+                        obvious_examples.append(
+                            f"[Line {i+1}] {description}: {stripped[:70]}"
+                        )
                         break
 
         obvious_ratio = obvious_count / max(total_comments, 1)
@@ -994,7 +1084,9 @@ class AICodeDetector:
             return "LOW"
 
         mean_score = sum(score_values) / len(score_values)
-        variance = sum((x - mean_score)**2 for x in score_values) / len(score_values)
+        variance = (
+            sum((x - mean_score)**2 for x in score_values) / len(score_values)
+        )
 
         # Count how many dimensions agree
         high_ai = sum(1 for s in score_values if s > 0.5)
@@ -1003,15 +1095,19 @@ class AICodeDetector:
 
         if variance < 0.04 and agreement > 0.6:
             return "HIGH"
-        elif variance < 0.08 and agreement > 0.5:
+        if variance < 0.08 and agreement > 0.5:
             return "MEDIUM-HIGH"
-        elif variance < 0.15:
+        if variance < 0.15:
             return "MEDIUM"
-        else:
-            return "LOW"
+        return "LOW"
 
     # pylint: disable=too-many-branches
-    def _determine_verdict(self, ai_score: float, confidence: str, scores: Dict[str, Dict]) -> str:
+    def _determine_verdict(
+        self,
+        ai_score: float,
+        confidence: str,
+        scores: Dict[str, Dict]
+    ) -> str:
         # Count strong AI indicators
         strong_ai_indicators = 0
         if scores.get('obvious_comments', {}).get('ai_indicators', 0) > 0.4:
@@ -1033,17 +1129,20 @@ class AICodeDetector:
         # Enhanced verdict logic
         if ai_score > 0.70 or (ai_score > 0.55 and strong_ai_indicators >= 4):
             return "HIGHLY LIKELY AI-GENERATED"
-        elif ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
+        if ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
             return "LIKELY AI-GENERATED"
-        elif ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
+        if ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
             return "POSSIBLY AI-ASSISTED"
-        elif ai_score > 0.30:
+        if ai_score > 0.30:
             return "MIXED INDICATORS"
-        else:
-            return "LIKELY HUMAN-WRITTEN"
+        return "LIKELY HUMAN-WRITTEN"
 
     # pylint: disable=too-many-locals, too-many-branches
-    def _extract_key_indicators(self, scores: Dict[str, Dict], detected_patterns: Dict[str, List]) -> Dict[str, Any]:
+    def _extract_key_indicators(
+        self,
+        scores: Dict[str, Dict],
+        detected_patterns: Dict[str, List]
+    ) -> Dict[str, Any]:
         indicators = {}
 
         # Original indicators
@@ -1100,19 +1199,23 @@ class AICodeDetector:
 
         # Add examples of detected patterns
         if detected_patterns.get('obvious_comment_examples'):
-            indicators['obvious_comment_examples'] = detected_patterns['obvious_comment_examples'][:5]
+            indicators['obvious_comment_examples'] = \
+                detected_patterns['obvious_comment_examples'][:5]
 
         if detected_patterns.get('ai_phrases'):
             indicators['ai_phrase_examples'] = detected_patterns['ai_phrases'][:5]
 
         if detected_patterns.get('textbook_patterns'):
-            indicators['textbook_pattern_examples'] = detected_patterns['textbook_patterns'][:5]
+            indicators['textbook_pattern_examples'] = \
+                detected_patterns['textbook_patterns'][:5]
 
         if detected_patterns.get('defensive_patterns'):
-            indicators['defensive_pattern_examples'] = detected_patterns['defensive_patterns'][:5]
+            indicators['defensive_pattern_examples'] = \
+                detected_patterns['defensive_patterns'][:5]
 
         if detected_patterns.get('small_functions'):
-            indicators['small_function_examples'] = detected_patterns['small_functions'][:5]
+            indicators['small_function_examples'] = \
+                detected_patterns['small_functions'][:5]
 
         if detected_patterns.get('missing_quirks'):
             indicators['missing_human_quirks'] = detected_patterns['missing_quirks']
@@ -1120,22 +1223,23 @@ class AICodeDetector:
         return indicators
 
 
-# pylint: disable=duplicate-code, too-many-locals, too-many-branches, too-many-statements
-def generate_html_report(results: List[DetectionResult], output_path: str, title: str = "AI Code Detection Report"):
+# pylint: disable=duplicate-code, too-many-locals, too-many-branches, too-many-statements, too-many-nested-blocks
+def generate_html_report(
+    results: List[DetectionResult],
+    output_path: str,
+    title: str = "AI Code Detection Report"
+):
     """
     Generate a professional HTML report with all analysis results.
-
-    Args:
-        results: List of DetectionResult objects
-        output_path: Path to save the HTML report
-        title: Title for the report
     """
-    from datetime import datetime
 
     # Calculate summary statistics
     valid_results = [r for r in results if r.confidence != "ERROR"]
     total_files = len(valid_results)
-    avg_ai_prob = sum(r.ai_probability for r in valid_results) / max(total_files, 1)
+    avg_ai_prob = (
+        sum(r.ai_probability for r in valid_results) / total_files
+        if total_files > 0 else 0
+    )
 
     # Distribution
     distribution = {
@@ -1148,41 +1252,27 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
     def get_probability_color(prob):
         if prob >= 75:
             return '#dc3545'  # Red
-        elif prob >= 55:
+        if prob >= 55:
             return '#fd7e14'  # Orange
-        elif prob >= 35:
+        if prob >= 35:
             return '#ffc107'  # Yellow
-        else:
-            return '#28a745'  # Green
+        return '#28a745'  # Green
 
     def get_probability_class(prob):
         if prob >= 75:
             return 'red'
-        elif prob >= 55:
+        if prob >= 55:
             return 'orange'
-        elif prob >= 35:
+        if prob >= 35:
             return 'yellow'
-        else:
-            return 'green'
-
-    def get_probability_label(prob):
-        if prob >= 75:
-            return 'Likely AI-Generated'
-        elif prob >= 55:
-            return 'Possibly AI-Assisted'
-        elif prob >= 35:
-            return 'Mixed Indicators'
-        else:
-            return 'Likely Human'
+        return 'green'
 
     # Generate file cards HTML
     file_cards_html = ""
     sorted_results = sorted(valid_results, key=lambda x: x.ai_probability, reverse=True)
 
     for idx, result in enumerate(sorted_results):
-        color = get_probability_color(result.ai_probability)
         color_class = get_probability_class(result.ai_probability)
-        prob_label = get_probability_label(result.ai_probability)
 
         # Generate dimension scores HTML
         dimension_html = ""
@@ -1211,15 +1301,19 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                 ai_indicator = score_data.get('ai_indicators', 0)
                 score_pct = ai_indicator * 100
                 score_color = get_probability_color(score_pct)
-                dimension_html += f'''
-                <div class="dimension-item">
-                    <span class="dim-icon">{dim_icon}</span>
-                    <span class="dim-name">{dim_name}</span>
-                    <div class="dim-bar-container">
-                        <div class="dim-bar" style="width: {score_pct}%; background: {score_color};"></div>
-                    </div>
-                    <span class="dim-score" style="color: {score_color};">{score_pct:.0f}%</span>
-                </div>'''
+                dimension_html += (
+                    f'<div class="dimension-item">\n'
+                    f'    <span class="dim-icon">{dim_icon}</span>\n'
+                    f'    <span class="dim-name">{dim_name}</span>\n'
+                    f'    <div class="dim-bar-container">\n'
+                    f'        <div class="dim-bar" '
+                    f'style="width: {score_pct}%; background: {score_color};">'
+                    f'</div>\n'
+                    f'    </div>\n'
+                    f'    <span class="dim-score" style="color: {score_color};">'
+                    f'{score_pct:.0f}%</span>\n'
+                    f'</div>'
+                )
 
         # Generate detected patterns HTML
         patterns_html = ""
@@ -1235,10 +1329,11 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         for pattern_key, pattern_name, pattern_icon in pattern_categories:
             if pattern_key in result.detected_patterns and result.detected_patterns[pattern_key]:
                 patterns = result.detected_patterns[pattern_key][:5]
-                patterns_html += f'''
-                <div class="pattern-category">
-                    <h5>{pattern_icon} {pattern_name}</h5>
-                    <ul class="pattern-list">'''
+                patterns_html += (
+                    f'<div class="pattern-category">\n'
+                    f'    <h5>{pattern_icon} {pattern_name}</h5>\n'
+                    f'    <ul class="pattern-list">'
+                )
                 for p in patterns:
                     escaped_p = str(p).replace('<', '&lt;').replace('>', '&gt;')
                     patterns_html += f'<li>{escaped_p}</li>'
@@ -1246,7 +1341,9 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
         # Generate indicators HTML
         indicators_html = ""
-        boolean_indicators = {k: v for k, v in result.indicators.items() if isinstance(v, bool) and v}
+        boolean_indicators = {
+            k: v for k, v in result.indicators.items() if isinstance(v, bool) and v
+        }
         if boolean_indicators:
             indicators_html = '<div class="indicators-list">'
             for key in boolean_indicators:
@@ -1254,44 +1351,53 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                 indicators_html += f'<span class="indicator-badge">{indicator_name}</span>'
             indicators_html += '</div>'
 
-        file_cards_html += f'''
-        <div class="file-card" id="file-{idx}">
-            <div class="file-header">
-                <div class="file-info">
-                    <h3 class="file-path">📄 {result.file_path}</h3>
-                    <span class="verdict-badge {color_class}">{result.verdict}</span>
-                </div>
-                <div class="file-summary">
-                    <div class="probability-circle {color_class}">
-                        <span class="prob-value">{result.ai_probability:.1f}%</span>
-                        <span class="prob-label">AI</span>
-                    </div>
-                    <div class="confidence-badge">Confidence: {result.confidence}</div>
-                </div>
-            </div>
-
-            <div class="file-details">
-                <div class="details-section">
-                    <h4>📊 Detection Dimensions (16 Total)</h4>
-                    <div class="dimensions-grid">
-                        {dimension_html}
-                    </div>
-                </div>
-
-                {'<div class="details-section"><h4>🔍 Detected Patterns</h4>' + patterns_html + '</div>' if patterns_html else ''}
-
-                {'<div class="details-section"><h4>🎯 Key Indicators</h4>' + indicators_html + '</div>' if indicators_html else ''}
-            </div>
-
-            <button class="toggle-details" onclick="toggleDetails({idx})">
-                <span class="expand-icon">▼</span> Show Details
-            </button>
-        </div>'''
+        # pylint: disable=line-too-long
+        file_cards_html += (
+            f'<div class="file-card" id="file-{idx}">\n'
+            f'    <div class="file-header">\n'
+            f'        <div class="file-info">\n'
+            f'            <h3 class="file-path">📄 {result.file_path}</h3>\n'
+            f'            <span class="verdict-badge {color_class}">'
+            f'{result.verdict}</span>\n'
+            f'        </div>\n'
+            f'        <div class="file-summary">\n'
+            f'            <div class="probability-circle {color_class}">\n'
+            f'                <span class="prob-value">{result.ai_probability:.1f}%</span>\n'
+            f'                <span class="prob-label">AI</span>\n'
+            f'            </div>\n'
+            f'            <div class="confidence-badge">Confidence: {result.confidence}</div>\n'
+            f'        </div>\n'
+            f'    </div>\n'
+            f'    <div class="file-details">\n'
+            f'        <div class="details-section">\n'
+            f'            <h4>📊 Detection Dimensions (16 Total)</h4>\n'
+            f'            <div class="dimensions-grid">\n'
+            f'                {dimension_html}\n'
+            f'            </div>\n'
+            f'        </div>\n'
+            f'        ' + (f'<div class="details-section"><h4>🔍 Detected Patterns</h4>{patterns_html}</div>' if patterns_html else '') + '\n'
+            f'        ' + (f'<div class="details-section"><h4>🎯 Key Indicators</h4>{indicators_html}</div>' if indicators_html else '') + '\n'
+            f'    </div>\n'
+            f'    <button class="toggle-details" onclick="toggleDetails({idx})">\n'
+            f'        <span class="expand-icon">▼</span> Show Details\n'
+            f'    </button>\n'
+            f'</div>'
+        )
+        # pylint: enable=line-too-long
 
     # Summary row for multiple files
     summary_section = ""
     if total_files > 1:
         dist_total = max(sum(distribution.values()), 1)
+        # Use intermediate variables for HTML parts to avoid line length issues
+        lh_width = distribution['likely_human'] / dist_total * 100
+        mx_width = distribution['mixed'] / dist_total * 100
+        pa_width = distribution['possibly_ai'] / dist_total * 100
+        la_width = distribution['likely_ai'] / dist_total * 100
+
+        avg_class = get_probability_class(avg_ai_prob)
+
+        # pylint: disable=line-too-long
         summary_section = f'''
         <section class="summary-section">
             <h2>📊 Analysis Summary</h2>
@@ -1301,7 +1407,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                     <div class="stat-label">Files Analyzed</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value {get_probability_class(avg_ai_prob)}">{avg_ai_prob:.1f}%</div>
+                    <div class="stat-value {avg_class}">{avg_ai_prob:.1f}%</div>
                     <div class="stat-label">Avg AI Probability</div>
                 </div>
                 <div class="stat-card">
@@ -1317,32 +1423,30 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             <div class="distribution-section">
                 <h3>Distribution by AI Probability</h3>
                 <div class="distribution-bar">
-                    <div class="dist-segment green" style="width: {distribution['likely_human'] / dist_total * 100}%;"
-                         title="Likely Human (0-35%): {distribution['likely_human']} files"></div>
-                    <div class="dist-segment yellow" style="width: {distribution['mixed'] / dist_total * 100}%;"
+                    <div class="dist-segment green" style="width: {lh_width}%;"
+                         title="Likely Human (0-35%):
+                         {distribution['likely_human']} files"></div>
+                    <div class="dist-segment yellow" style="width: {mx_width}%;"
                          title="Mixed (35-55%): {distribution['mixed']} files"></div>
-                    <div class="dist-segment orange" style="width: {distribution['possibly_ai'] / dist_total * 100}%;"
+                    <div class="dist-segment orange" style="width: {pa_width}%;"
                          title="Possibly AI (55-75%): {distribution['possibly_ai']} files"></div>
-                    <div class="dist-segment red" style="width: {distribution['likely_ai'] / dist_total * 100}%;"
+                    <div class="dist-segment red" style="width: {la_width}%;"
                          title="Likely AI (75-100%): {distribution['likely_ai']} files"></div>
                 </div>
                 <div class="distribution-legend">
-                    <span><span class="legend-dot green"></span> Likely Human (0-35%): {distribution['likely_human']}</span>
+                    <span><span class="legend-dot green"></span> Likely Human (0-35%):
+                    {distribution['likely_human']}</span>
                     <span><span class="legend-dot yellow"></span> Mixed (35-55%): {distribution['mixed']}</span>
                     <span><span class="legend-dot orange"></span> Possibly AI (55-75%): {distribution['possibly_ai']}</span>
                     <span><span class="legend-dot red"></span> Likely AI (75-100%): {distribution['likely_ai']}</span>
                 </div>
             </div>
         </section>'''
+        # pylint: enable=line-too-long
 
-    html_content = f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <style>
-        :root {{
+    # Split CSS to avoid long lines
+    css_content = """
+        :root {
             --bg-primary: #1a1a2e;
             --bg-secondary: #16213e;
             --bg-card: rgba(255,255,255,0.05);
@@ -1355,112 +1459,82 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             --color-orange: #fd7e14;
             --color-red: #dc3545;
             --color-gray: #6c757d;
-        }}
+        }
 
-        * {{
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {{
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
             color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
             line-height: 1.6;
-        }}
+        }
 
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        header {{
+        header {
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             border-radius: 16px;
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }}
+        }
 
-        h1 {{
-            font-size: 2.2em;
-            margin-bottom: 10px;
-            color: #fff;
-        }}
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: #fff; }
 
-        .meta {{
-            color: var(--text-secondary);
-            font-size: 0.9em;
-        }}
+        .meta { color: var(--text-secondary); font-size: 0.9em; }
+        .meta span { margin-right: 20px; }
 
-        .meta span {{
-            margin-right: 20px;
-        }}
-
-        /* Summary Section */
-        .summary-section {{
+        .summary-section {
             background: var(--bg-card);
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 25px;
             border: 1px solid rgba(255,255,255,0.1);
-        }}
+        }
 
-        .summary-section h2 {{
+        .summary-section h2 {
             color: #fff;
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid rgba(255,255,255,0.1);
-        }}
+        }
 
-        .summary-stats {{
+        .summary-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-bottom: 25px;
-        }}
+        }
 
-        .stat-card {{
+        .stat-card {
             background: rgba(0,0,0,0.2);
             border-radius: 10px;
             padding: 20px;
             text-align: center;
-        }}
+        }
 
-        .stat-value {{
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #fff;
-        }}
+        .stat-value { font-size: 2.5em; font-weight: bold; color: #fff; }
+        .stat-value.green { color: var(--color-green); }
+        .stat-value.yellow { color: var(--color-yellow); }
+        .stat-value.orange { color: var(--color-orange); }
+        .stat-value.red { color: var(--color-red); }
 
-        .stat-value.green {{ color: var(--color-green); }}
-        .stat-value.yellow {{ color: var(--color-yellow); }}
-        .stat-value.orange {{ color: var(--color-orange); }}
-        .stat-value.red {{ color: var(--color-red); }}
+        .stat-label { color: var(--text-secondary); font-size: 0.9em; margin-top: 5px; }
 
-        .stat-label {{
-            color: var(--text-secondary);
-            font-size: 0.9em;
-            margin-top: 5px;
-        }}
+        .distribution-section h3 { margin-bottom: 15px; color: #fff; }
 
-        .distribution-section h3 {{
-            margin-bottom: 15px;
-            color: #fff;
-        }}
-
-        .distribution-bar {{
+        .distribution-bar {
             display: flex;
             height: 35px;
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 15px;
-        }}
+        }
 
-        .dist-segment {{
+        .dist-segment {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1468,53 +1542,34 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             font-size: 0.85em;
             color: #fff;
             min-width: 2px;
-        }}
+        }
 
-        .dist-segment.green {{ background: var(--color-green); }}
-        .dist-segment.yellow {{ background: var(--color-yellow); color: #333; }}
-        .dist-segment.orange {{ background: var(--color-orange); }}
-        .dist-segment.red {{ background: var(--color-red); }}
+        .dist-segment.green { background: var(--color-green); }
+        .dist-segment.yellow { background: var(--color-yellow); color: #333; }
+        .dist-segment.orange { background: var(--color-orange); }
+        .dist-segment.red { background: var(--color-red); }
 
-        .distribution-legend {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }}
+        .distribution-legend { display: flex; flex-wrap: wrap; gap: 15px; }
+        .distribution-legend span { display: flex; align-items: center; gap: 6px; font-size: 0.9em; }
 
-        .distribution-legend span {{
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9em;
-        }}
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .legend-dot.green { background: var(--color-green); }
+        .legend-dot.yellow { background: var(--color-yellow); }
+        .legend-dot.orange { background: var(--color-orange); }
+        .legend-dot.red { background: var(--color-red); }
 
-        .legend-dot {{
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }}
-
-        .legend-dot.green {{ background: var(--color-green); }}
-        .legend-dot.yellow {{ background: var(--color-yellow); }}
-        .legend-dot.orange {{ background: var(--color-orange); }}
-        .legend-dot.red {{ background: var(--color-red); }}
-
-        /* File Cards */
-        .file-card {{
+        .file-card {
             background: var(--bg-card);
             border-radius: 12px;
             margin-bottom: 20px;
             border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
-        }}
+        }
 
-        .file-card:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }}
+        .file-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
 
-        .file-header {{
+        .file-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -1522,41 +1577,34 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             background: rgba(0,0,0,0.2);
             flex-wrap: wrap;
             gap: 15px;
-        }}
+        }
 
-        .file-info {{
-            flex: 1;
-            min-width: 250px;
-        }}
+        .file-info { flex: 1; min-width: 250px; }
 
-        .file-path {{
+        .file-path {
             font-size: 1.1em;
             color: #fff;
             margin-bottom: 10px;
             word-break: break-all;
             font-family: 'Monaco', 'Consolas', monospace;
-        }}
+        }
 
-        .verdict-badge {{
+        .verdict-badge {
             display: inline-block;
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.85em;
             font-weight: 600;
-        }}
+        }
 
-        .verdict-badge.green {{ background: rgba(40, 167, 69, 0.2); color: var(--color-green); border: 1px solid var(--color-green); }}
-        .verdict-badge.yellow {{ background: rgba(255, 193, 7, 0.2); color: var(--color-yellow); border: 1px solid var(--color-yellow); }}
-        .verdict-badge.orange {{ background: rgba(253, 126, 20, 0.2); color: var(--color-orange); border: 1px solid var(--color-orange); }}
-        .verdict-badge.red {{ background: rgba(220, 53, 69, 0.2); color: var(--color-red); border: 1px solid var(--color-red); }}
+        .verdict-badge.green { background: rgba(40, 167, 69, 0.2); color: var(--color-green); border: 1px solid var(--color-green); }
+        .verdict-badge.yellow { background: rgba(255, 193, 7, 0.2); color: var(--color-yellow); border: 1px solid var(--color-yellow); }
+        .verdict-badge.orange { background: rgba(253, 126, 20, 0.2); color: var(--color-orange); border: 1px solid var(--color-orange); }
+        .verdict-badge.red { background: rgba(220, 53, 69, 0.2); color: var(--color-red); border: 1px solid var(--color-red); }
 
-        .file-summary {{
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }}
+        .file-summary { display: flex; align-items: center; gap: 15px; }
 
-        .probability-circle {{
+        .probability-circle {
             width: 80px;
             height: 80px;
             border-radius: 50%;
@@ -1565,120 +1613,73 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             align-items: center;
             justify-content: center;
             border: 3px solid;
-        }}
+        }
 
-        .probability-circle.green {{ border-color: var(--color-green); background: rgba(40, 167, 69, 0.1); }}
-        .probability-circle.yellow {{ border-color: var(--color-yellow); background: rgba(255, 193, 7, 0.1); }}
-        .probability-circle.orange {{ border-color: var(--color-orange); background: rgba(253, 126, 20, 0.1); }}
-        .probability-circle.red {{ border-color: var(--color-red); background: rgba(220, 53, 69, 0.1); }}
+        .probability-circle.green { border-color: var(--color-green); background: rgba(40, 167, 69, 0.1); }
+        .probability-circle.yellow { border-color: var(--color-yellow); background: rgba(255, 193, 7, 0.1); }
+        .probability-circle.orange { border-color: var(--color-orange); background: rgba(253, 126, 20, 0.1); }
+        .probability-circle.red { border-color: var(--color-red); background: rgba(220, 53, 69, 0.1); }
 
-        .prob-value {{
-            font-size: 1.3em;
-            font-weight: bold;
-        }}
+        .prob-value { font-size: 1.3em; font-weight: bold; }
+        .probability-circle.green .prob-value { color: var(--color-green); }
+        .probability-circle.yellow .prob-value { color: var(--color-yellow); }
+        .probability-circle.orange .prob-value { color: var(--color-orange); }
+        .probability-circle.red .prob-value { color: var(--color-red); }
 
-        .probability-circle.green .prob-value {{ color: var(--color-green); }}
-        .probability-circle.yellow .prob-value {{ color: var(--color-yellow); }}
-        .probability-circle.orange .prob-value {{ color: var(--color-orange); }}
-        .probability-circle.red .prob-value {{ color: var(--color-red); }}
+        .prob-label { font-size: 0.75em; color: var(--text-secondary); }
 
-        .prob-label {{
-            font-size: 0.75em;
-            color: var(--text-secondary);
-        }}
-
-        .confidence-badge {{
+        .confidence-badge {
             background: rgba(255,255,255,0.1);
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 0.85em;
-        }}
+        }
 
-        .file-details {{
-            padding: 20px;
-            display: none;
-        }}
+        .file-details { padding: 20px; display: none; }
+        .file-details.visible { display: block; }
 
-        .file-details.visible {{
-            display: block;
-        }}
-
-        .details-section {{
-            margin-bottom: 25px;
-        }}
-
-        .details-section h4 {{
+        .details-section { margin-bottom: 25px; }
+        .details-section h4 {
             color: #fff;
             margin-bottom: 15px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-        }}
+        }
 
-        .dimensions-grid {{
+        .dimensions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 10px;
-        }}
+        }
 
-        .dimension-item {{
+        .dimension-item {
             display: flex;
             align-items: center;
             padding: 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
-        }}
+        }
 
-        .dim-icon {{
-            font-size: 1.1em;
-            margin-right: 10px;
-            width: 24px;
-            text-align: center;
-        }}
+        .dim-icon { font-size: 1.1em; margin-right: 10px; width: 24px; text-align: center; }
+        .dim-name { flex: 1; font-size: 0.9em; min-width: 100px; }
 
-        .dim-name {{
-            flex: 1;
-            font-size: 0.9em;
-            min-width: 100px;
-        }}
-
-        .dim-bar-container {{
+        .dim-bar-container {
             width: 80px;
             height: 8px;
             background: rgba(255,255,255,0.1);
             border-radius: 4px;
             overflow: hidden;
             margin: 0 10px;
-        }}
+        }
 
-        .dim-bar {{
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s;
-        }}
+        .dim-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .dim-score { font-weight: bold; font-size: 0.9em; width: 45px; text-align: right; }
 
-        .dim-score {{
-            font-weight: bold;
-            font-size: 0.9em;
-            width: 45px;
-            text-align: right;
-        }}
+        .pattern-category { margin-bottom: 15px; }
+        .pattern-category h5 { color: var(--text-secondary); margin-bottom: 8px; font-size: 0.95em; }
 
-        .pattern-category {{
-            margin-bottom: 15px;
-        }}
-
-        .pattern-category h5 {{
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-size: 0.95em;
-        }}
-
-        .pattern-list {{
-            list-style: none;
-            padding-left: 10px;
-        }}
-
-        .pattern-list li {{
+        .pattern-list { list-style: none; padding-left: 10px; }
+        .pattern-list li {
             padding: 6px 10px;
             background: rgba(0,0,0,0.15);
             border-radius: 4px;
@@ -1687,23 +1688,18 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             font-family: 'Monaco', 'Consolas', monospace;
             word-break: break-all;
             border-left: 3px solid var(--accent-purple);
-        }}
+        }
 
-        .indicators-list {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }}
-
-        .indicator-badge {{
+        .indicators-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .indicator-badge {
             background: rgba(83, 52, 131, 0.3);
             border: 1px solid var(--accent-purple);
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.85em;
-        }}
+        }
 
-        .toggle-details {{
+        .toggle-details {
             width: 100%;
             padding: 12px;
             background: rgba(255,255,255,0.05);
@@ -1716,108 +1712,53 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             align-items: center;
             justify-content: center;
             gap: 8px;
-        }}
+        }
 
-        .toggle-details:hover {{
-            background: rgba(255,255,255,0.1);
-        }}
+        .toggle-details:hover { background: rgba(255,255,255,0.1); }
+        .expand-icon { transition: transform 0.2s; }
+        .toggle-details.expanded .expand-icon { transform: rotate(180deg); }
 
-        .expand-icon {{
-            transition: transform 0.2s;
-        }}
-
-        .toggle-details.expanded .expand-icon {{
-            transform: rotate(180deg);
-        }}
-
-        footer {{
+        footer {
             text-align: center;
             padding: 25px;
             color: var(--text-secondary);
             margin-top: 30px;
-        }}
+        }
 
-        /* Print styles */
-        @media print {{
-            body {{
-                background: #fff;
-                color: #333;
-                padding: 10px;
-            }}
+        @media print {
+            body { background: #fff; color: #333; padding: 10px; }
+            header { background: #f5f5f5; color: #333; }
+            h1, h2, h3, h4 { color: #333; }
+            .file-card { border: 1px solid #ddd; break-inside: avoid; }
+            .file-details { display: block !important; }
+            .toggle-details { display: none; }
+        }
 
-            header {{
-                background: #f5f5f5;
-                color: #333;
-            }}
+        @media (max-width: 768px) {
+            h1 { font-size: 1.6em; }
+            .file-header { flex-direction: column; }
+            .file-summary { width: 100%; justify-content: flex-start; }
+            .dimensions-grid { grid-template-columns: 1fr; }
+            .summary-stats { grid-template-columns: 1fr 1fr; }
+        }
+    """
 
-            h1, h2, h3, h4 {{
-                color: #333;
-            }}
+    gen_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            .file-card {{
-                border: 1px solid #ddd;
-                break-inside: avoid;
-            }}
-
-            .file-details {{
-                display: block !important;
-            }}
-
-            .toggle-details {{
-                display: none;
-            }}
-        }}
-
-        /* Responsive */
-        @media (max-width: 768px) {{
-            h1 {{ font-size: 1.6em; }}
-
-            .file-header {{
-                flex-direction: column;
-            }}
-
-            .file-summary {{
-                width: 100%;
-                justify-content: flex-start;
-            }}
-
-            .dimensions-grid {{
-                grid-template-columns: 1fr;
-            }}
-
-            .summary-stats {{
-                grid-template-columns: 1fr 1fr;
-            }}
-        }}
-
-        /* Scrollable sections */
-        .scrollable {{
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }}
-
-        .scrollable::-webkit-scrollbar {{
-            width: 6px;
-        }}
-
-        .scrollable::-webkit-scrollbar-track {{
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-        }}
-
-        .scrollable::-webkit-scrollbar-thumb {{
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-        }}
-    </style>
+    html_content = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>{css_content}</style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🔍 {title}</h1>
             <div class="meta">
-                <span>📅 Generated: <strong>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</strong></span>
+                <span>📅 Generated: <strong>{gen_time}</strong></span>
                 <span>📁 Files: <strong>{total_files}</strong></span>
                 <span>📊 Dimensions: <strong>16</strong></span>
             </div>
@@ -1827,7 +1768,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
         <section class="files-section">
             <h2 style="color: #fff; margin-bottom: 20px;">📄 File Analysis Results</h2>
-            {file_cards_html if file_cards_html else '<p style="color: var(--text-secondary);">No files were analyzed.</p>'}
+            {file_cards_html if file_cards_html else
+             '<p style="color: var(--text-secondary);">No files were analyzed.</p>'}
         </section>
 
         <footer>
@@ -1871,8 +1813,10 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
 
 def main():
+    """Main entry point"""
     parser = argparse.ArgumentParser(
-        description='AI Code Detector - Analyze code to detect AI generation patterns (Enhanced Version)',
+        description=('AI Code Detector - Analyze code to detect AI generation patterns '
+                     '(Enhanced Version)'),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1899,8 +1843,11 @@ Examples:
     parser.add_argument('-o', '--output', help='Output results to JSON file')
     parser.add_argument('-f', '--format', choices=['summary', 'detailed'],
                        default='summary', help='Output format for console (default: summary)')
-    parser.add_argument('--extensions', default='.py,.js,.java,.cpp,.c,.php,.rb,.go,.ts',
-                       help='File extensions to analyze (comma-separated)')
+    parser.add_argument(
+        '--extensions',
+        default='.py,.js,.java,.cpp,.c,.php,.rb,.go,.ts',
+        help='File extensions to analyze (comma-separated)'
+    )
     parser.add_argument('--html', action='store_true',
                        help='Generate HTML report')
     parser.add_argument('--html-output', metavar='FILE',
@@ -1961,12 +1908,16 @@ Examples:
             print(f"{'─'*80}")
 
             # Group scores by category
-            original_dims = ['naming_analysis', 'comment_analysis', 'structure_analysis',
-                           'complexity_analysis', 'error_handling', 'documentation',
-                           'formatting_consistency', 'modern_syntax']
-            new_dims = ['enhanced_comment_analysis', 'defensive_coding', 'textbook_algorithms',
-                       'over_modularization', 'perfect_consistency', 'contextual_quirks',
-                       'formatting_perfection', 'obvious_comments']
+            original_dims = [
+                'naming_analysis', 'comment_analysis', 'structure_analysis',
+                'complexity_analysis', 'error_handling', 'documentation',
+                'formatting_consistency', 'modern_syntax'
+            ]
+            new_dims = [
+                'enhanced_comment_analysis', 'defensive_coding', 'textbook_algorithms',
+                'over_modularization', 'perfect_consistency', 'contextual_quirks',
+                'formatting_perfection', 'obvious_comments'
+            ]
 
             print("\n  📁 ORIGINAL DIMENSIONS:")
             for category in original_dims:
@@ -2014,7 +1965,7 @@ Examples:
     # JSON output
     if args.output:
         output_data = [asdict(r) for r in results]
-        with open(args.output, 'w') as f:
+        with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2)
         print(f"\n\nJSON results saved to: {args.output}")
 
@@ -2034,7 +1985,7 @@ Examples:
 
     print(f"\n{'='*80}")
     print(f"Analysis Complete - {len(results)} file(s) processed")
-    print(f"Dimensions analyzed: 16 (8 original + 8 enhanced)")
+    print("Dimensions analyzed: 16 (8 original + 8 enhanced)")
     print(f"{'='*80}\n")
 
 
