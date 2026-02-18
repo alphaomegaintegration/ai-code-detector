@@ -9,8 +9,9 @@ import re
 import sys
 import json
 import argparse
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional, Union
+from typing import Dict, List, Tuple, Any, Optional
 from collections import Counter
 from dataclasses import dataclass, asdict, field
 
@@ -118,7 +119,7 @@ class AICodeDetector:
 
             file_size = file_path_obj.stat().st_size
             if file_size > self.max_file_size:
-                return None, f"File size ({file_size} bytes) exceeds limit ({self.max_file_size} bytes)"
+                return None, f"File size ({file_size}) exceeds limit ({self.max_file_size})"
 
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 code = f.read(self.max_file_size + 1)
@@ -129,6 +130,15 @@ class AICodeDetector:
             return None, str(e)
 
     def analyze_file(self, file_path: str) -> DetectionResult:
+        """
+        Analyze a single code file for AI patterns.
+
+        Args:
+            file_path: Path to the file to analyze
+
+        Returns:
+            DetectionResult object with probabilities and indicators
+        """
         code, error = self._read_file_safely(file_path)
         if error:
             verdict = "FILE TOO LARGE" if "limit" in error else "Unable to analyze"
@@ -1117,8 +1127,6 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         output_path: Path to save the HTML report
         title: Title for the report
     """
-    from datetime import datetime
-
     # Calculate summary statistics
     valid_results = [r for r in results if r.confidence != "ERROR"]
     total_files = len(valid_results)
@@ -1887,7 +1895,7 @@ Examples:
     parser.add_argument('-f', '--format', choices=['summary', 'detailed'],
                        default='summary', help='Output format for console (default: summary)')
     parser.add_argument('--extensions', default='.py,.js,.java,.cpp,.c,.php,.rb,.go,.ts',
-                       help='File extensions to analyze (comma-separated)')
+                       help='Extensions to analyze (comma-separated)')
     parser.add_argument('--html', action='store_true',
                        help='Generate HTML report')
     parser.add_argument('--html-output', metavar='FILE',
@@ -1926,7 +1934,7 @@ Examples:
             print(f"Confidence:        {result.confidence}")
             print(f"Verdict:           {result.verdict}")
             if result.indicators:
-                print(f"\n📊 Key Indicators:")
+                print("\n📊 Key Indicators:")
                 for key, value in result.indicators.items():
                     if isinstance(value, list):
                         print(f"  • {key.replace('_', ' ').title()}:")
@@ -2003,7 +2011,7 @@ Examples:
     # JSON output
     if args.output:
         output_data = [asdict(r) for r in results]
-        with open(args.output, 'w') as f:
+        with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2)
         print(f"\n\nJSON results saved to: {args.output}")
 
@@ -2023,7 +2031,7 @@ Examples:
 
     print(f"\n{'='*80}")
     print(f"Analysis Complete - {len(results)} file(s) processed")
-    print(f"Dimensions analyzed: 16 (8 original + 8 enhanced)")
+    print("Dimensions analyzed: 16 (8 original + 8 enhanced)")
     print(f"{'='*80}\n")
 
 
