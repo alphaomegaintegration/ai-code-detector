@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from github_repo_scanner import GitHubRepoScanner
 
+# pylint: disable=protected-access
+
 class TestGitHubRepoScanner(unittest.TestCase):
     def setUp(self):
         self.scanner = GitHubRepoScanner(verbose=False)
