@@ -108,6 +108,22 @@ class GitHubRepoScanner:
 
         return False, normalized_url
 
+    def _validate_branch_name(self, branch: str) -> bool:
+        """Validate branch name to prevent argument injection and unsafe characters"""
+        if not branch:
+            return True
+
+        # Prevent argument injection (starting with -)
+        if branch.startswith('-'):
+            return False
+
+        # Allow only safe characters: alphanumeric, /, _, ., -
+        # git branch names can contain other chars, but for security we restrict to this set
+        if not re.match(r'^[a-zA-Z0-9_./-]+$', branch):
+            return False
+
+        return True
+
     def _clone_repository(self, url: str, branch: Optional[str] = None) -> str:
         """Clone a GitHub repository to a temporary directory"""
         self.temp_dir = tempfile.mkdtemp(prefix='ai_scanner_')
@@ -175,6 +191,7 @@ class GitHubRepoScanner:
 
         code_files = []
         repo = Path(repo_path)
+        repo_resolved = repo.resolve()
 
         for file_path in repo.rglob('*'):
             # Skip directories in SKIP_DIRECTORIES
@@ -183,8 +200,18 @@ class GitHubRepoScanner:
 
             # Only include files with matching extensions
             if file_path.is_file() and file_path.suffix.lower() in extensions:
+                # Security check: Ensure file resolves to within the repo directory (prevent symlink traversal)
+                try:
+                    resolved_file = file_path.resolve()
+                    # This will raise ValueError if resolved_file is not relative to repo_resolved
+                    resolved_file.relative_to(repo_resolved)
+                except (ValueError, RuntimeError):
+                    self._log(f"Skipping symlink to external file: {file_path}", "WARN")
+                    continue
+
                 # Skip very large files (> 1MB)
-                if file_path.stat().st_size <= 1024 * 1024:
+                # Check size on the resolved file to handle symlinks correctly
+                if resolved_file.stat().st_size <= 1024 * 1024:
                     code_files.append(file_path)
 
         return code_files
@@ -308,6 +335,10 @@ class GitHubRepoScanner:
         is_valid, normalized_url = self._validate_github_url(url)
         if not is_valid:
             raise ValueError(f"Invalid GitHub repository URL: {url}")
+
+        # Validate branch name
+        if branch and not self._validate_branch_name(branch):
+            raise ValueError(f"Invalid branch name: {branch}")
 
         try:
             # Clone repository
