@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Detection Report - app</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                         Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .meta {
+            color: #a0a0a0;
+            font-size: 0.95em;
+        }
+
+        .meta span {
+            margin-right: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .stat-card h3 {
+            color: #a0a0a0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .stat-value.green { color: #28a745; }
+        .stat-value.yellow { color: #ffc107; }
+        .stat-value.orange { color: #fd7e14; }
+        .stat-value.red { color: #dc3545; }
+
+        section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        section h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .distribution-chart {
+            display: flex;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .dist-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #fff;
+            transition: flex 0.3s;
+        }
+
+        .dist-segment.green { background: #28a745; }
+        .dist-segment.yellow { background: #ffc107; color: #333; }
+        .dist-segment.orange { background: #fd7e14; }
+        .dist-segment.red { background: #dc3545; }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .lang-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .lang-name {
+            width: 120px;
+            font-weight: 500;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(90deg, #533483, #0f3460);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        .lang-count {
+            width: 80px;
+            text-align: right;
+            color: #a0a0a0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        tr.high-risk {
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .file-path {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .verdict-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .verdict-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .verdict-count {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .verdict-label {
+            font-size: 0.85em;
+            color: #a0a0a0;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-value { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 AI Code Detection Report</h1>
+            <div class="meta">
+                <span>📁 Repository: <strong>/app</strong>
+                </span>
+                <span>🌿 Branch: <strong>local</strong></span>
+                <span>📅 Analyzed: <strong>
+                    2026-02-18 13:35:22
+                </strong></span>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Files Analyzed</h3>
+                <div class="stat-value">6</div>
+            </div>
+            <div class="stat-card">
+                <h3>Average AI Probability</h3>
+                <div class="stat-value green">23.82%</div>
+            </div>
+            <div class="stat-card">
+                <h3>High Risk Files</h3>
+                <div class="stat-value green">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Languages Detected</h3>
+                <div class="stat-value">1</div>
+            </div>
+        </div>
+
+        <section>
+            <h2>📊 AI Probability Distribution</h2>
+            <div class="distribution-chart">
+                <div class="dist-segment green"
+                     style="flex: 83.33333333333334">
+                    5</div>
+                <div class="dist-segment yellow"
+                     style="flex: 16.666666666666664">
+                    1</div>
+                <div class="dist-segment orange"
+                     style="flex: 0.0">
+                    0</div>
+                <div class="dist-segment red"
+                     style="flex: 0.0">
+                    0</div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#28a745"></div> Likely Human:
+                    5 files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#ffc107"></div> Mixed:
+                    1 files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#fd7e14"></div> Possibly AI:
+                    0 files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#dc3545"></div> Likely AI:
+                    0 files</div>
+            </div>
+        </section>
+
+        <section>
+            <h2>📈 Verdict Summary</h2>
+            <div class="verdict-summary">
+                <div class="verdict-item">
+                    <div class="verdict-count" style="color:#dc3545">
+                        0</div>
+                    <div class="verdict-label">Likely AI-Generated</div>
+                </div>
+                <div class="verdict-item">
+                    <div class="verdict-count" style="color:#fd7e14">
+                        1</div>
+                    <div class="verdict-label">Possibly AI-Assisted</div>
+                </div>
+                <div class="verdict-item">
+                    <div class="verdict-count" style="color:#ffc107">
+                        0</div>
+                    <div class="verdict-label">Mixed Indicators</div>
+                </div>
+                <div class="verdict-item">
+                    <div class="verdict-count" style="color:#28a745">
+                        5</div>
+                    <div class="verdict-label">Likely Human-Written</div>
+                </div>
+                <div class="verdict-item">
+                    <div class="verdict-count" style="color:#6c757d">
+                        0</div>
+                    <div class="verdict-label">Inconclusive</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>💻 Language Breakdown</h2>
+
+            <div class="lang-bar">
+                <span class="lang-name">Python</span>
+                <div class="bar-container">
+                    <div class="bar" style="width: 100.0%"></div>
+                </div>
+                <span class="lang-count">6 files</span>
+            </div>
+        </section>
+
+        <section>
+            <h2>🔝 Top 10 Most Likely AI-Generated Files</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>File Path</th>
+                            <th>AI Probability</th>
+                            <th>Confidence</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+            <tr>
+                <td>1</td>
+                <td class="file-path">test_ai_code.py</td>
+                <td style="color: #ffc107; font-weight: bold;">40.87%</td>
+                <td>MEDIUM</td>
+                <td style="color: #ffc107;">POSSIBLY AI-ASSISTED</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td class="file-path">scan_example.py</td>
+                <td style="color: #28a745; font-weight: bold;">27.86%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td class="file-path">test_samples/ai_generated_sample.py</td>
+                <td style="color: #28a745; font-weight: bold;">22.43%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td class="file-path">ai_code_detector.py</td>
+                <td style="color: #28a745; font-weight: bold;">20.82%</td>
+                <td>MEDIUM-HIGH</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td class="file-path">github_repo_scanner.py</td>
+                <td style="color: #28a745; font-weight: bold;">17.53%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td class="file-path">test_samples/human_written_sample.py</td>
+                <td style="color: #28a745; font-weight: bold;">13.41%</td>
+                <td>MEDIUM-HIGH</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>⚠️ High Risk Files (>70% AI probability, HIGH confidence)</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Path</th>
+                            <th>AI Probability</th>
+                            <th>Confidence</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align: center; color: #28a745;">No high-risk files detected!</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>📋 All Files Analysis</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Path</th>
+                            <th>AI Probability</th>
+                            <th>Human Probability</th>
+                            <th>Confidence</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+            <tr>
+                <td class="file-path">test_ai_code.py</td>
+                <td style="color: #ffc107; font-weight: bold;">40.87%</td>
+                <td>59.13%</td>
+                <td>MEDIUM</td>
+                <td style="color: #ffc107;">POSSIBLY AI-ASSISTED</td>
+            </tr>
+            <tr>
+                <td class="file-path">scan_example.py</td>
+                <td style="color: #28a745; font-weight: bold;">27.86%</td>
+                <td>72.14%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td class="file-path">test_samples/ai_generated_sample.py</td>
+                <td style="color: #28a745; font-weight: bold;">22.43%</td>
+                <td>77.57%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td class="file-path">ai_code_detector.py</td>
+                <td style="color: #28a745; font-weight: bold;">20.82%</td>
+                <td>79.18%</td>
+                <td>MEDIUM-HIGH</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td class="file-path">github_repo_scanner.py</td>
+                <td style="color: #28a745; font-weight: bold;">17.53%</td>
+                <td>82.47%</td>
+                <td>MEDIUM</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+            <tr>
+                <td class="file-path">test_samples/human_written_sample.py</td>
+                <td style="color: #28a745; font-weight: bold;">13.41%</td>
+                <td>86.59%</td>
+                <td>MEDIUM-HIGH</td>
+                <td style="color: #28a745;">LIKELY HUMAN-WRITTEN</td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <p>Generated by AI Code Detector | Repository Scanner v1.0</p>
+            <p>Report generated on 2026-02-18 13:35:22</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1125 @@
+{
+  "repository_url": "/app",
+  "branch": "local",
+  "analysis_timestamp": "2026-02-18T13:35:22.982093",
+  "total_files": 6,
+  "files_analyzed": 6,
+  "average_ai_probability": 23.82,
+  "distribution": {
+    "likely_human (0-35%)": 5,
+    "mixed (35-55%)": 1,
+    "possibly_ai (55-75%)": 0,
+    "likely_ai (75-100%)": 0
+  },
+  "high_risk_files": [],
+  "language_breakdown": {
+    "Python": 6
+  },
+  "top_ai_files": [
+    {
+      "file": "test_ai_code.py",
+      "ai_probability": 40.87,
+      "human_probability": 59.13,
+      "confidence": "MEDIUM",
+      "verdict": "POSSIBLY AI-ASSISTED"
+    },
+    {
+      "file": "scan_example.py",
+      "ai_probability": 27.86,
+      "human_probability": 72.14,
+      "confidence": "MEDIUM",
+      "verdict": "LIKELY HUMAN-WRITTEN"
+    },
+    {
+      "file": "test_samples/ai_generated_sample.py",
+      "ai_probability": 22.43,
+      "human_probability": 77.57,
+      "confidence": "MEDIUM",
+      "verdict": "LIKELY HUMAN-WRITTEN"
+    },
+    {
+      "file": "ai_code_detector.py",
+      "ai_probability": 20.82,
+      "human_probability": 79.18,
+      "confidence": "MEDIUM-HIGH",
+      "verdict": "LIKELY HUMAN-WRITTEN"
+    },
+    {
+      "file": "github_repo_scanner.py",
+      "ai_probability": 17.53,
+      "human_probability": 82.47,
+      "confidence": "MEDIUM",
+      "verdict": "LIKELY HUMAN-WRITTEN"
+    },
+    {
+      "file": "test_samples/human_written_sample.py",
+      "ai_probability": 13.41,
+      "human_probability": 86.59,
+      "confidence": "MEDIUM-HIGH",
+      "verdict": "LIKELY HUMAN-WRITTEN"
+    }
+  ],
+  "file_results": [
+    {
+      "file_path": "test_ai_code.py",
+      "ai_probability": 40.87,
+      "human_probability": 59.13,
+      "confidence": "MEDIUM",
+      "indicators": {
+        "high_documentation": true,
+        "perfect_formatting": true,
+        "modern_syntax_heavy": true,
+        "ai_typical_comment_phrases": true,
+        "obvious_comments_detected": true,
+        "textbook_implementations": true,
+        "unnaturally_perfect_consistency": true,
+        "lacks_human_quirks": true,
+        "flawless_formatting": true,
+        "explains_obvious_code": true,
+        "obvious_comment_examples": [
+          "[Line 23] Validation comment: # Ensure that the input is a string",
+          "[Line 27] Verification: # Verify that the input is not empty",
+          "[Line 31] Return statement: # Return the result",
+          "[Line 45] Initialize statement: # Initialize the result dictionary",
+          "[Line 52] Validation comment: # Ensure that user_data is a dictionary"
+        ],
+        "ai_phrase_examples": [
+          "# Check that the input is not None",
+          "# Ensure that the input is a string",
+          "# Verify that the input is not empty",
+          "# Return the result",
+          "# Initialize the result dictionary"
+        ],
+        "textbook_pattern_examples": [
+          "len() == 0 instead of not",
+          "range(len()) instead of enumerate"
+        ],
+        "defensive_pattern_examples": [
+          "None check: if value is not None"
+        ],
+        "small_function_examples": [
+          "_helper_format_name (3 lines)",
+          "_helper_calculate_age (3 lines)"
+        ],
+        "missing_human_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.2,
+          "avg_identifier_length": 5.09,
+          "verbose_count": 0,
+          "abbreviated_count": 21,
+          "descriptive_count": 14
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.6,
+          "comment_ratio": 0.373,
+          "formal_comments": 9,
+          "informal_comments": 0,
+          "avg_comment_length": 30.98
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 1.0,
+          "blank_line_ratio": 0.305
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.0,
+          "avg_line_length": 24.56,
+          "control_structures": 22,
+          "nesting_indicators": 16
+        },
+        "error_handling": {
+          "ai_indicators": 0.0,
+          "try_blocks": 0,
+          "except_blocks": 0,
+          "null_checks": 1,
+          "error_handling_ratio": 0.007
+        },
+        "documentation": {
+          "ai_indicators": 0.7,
+          "docstring_count": 9,
+          "function_count": 8,
+          "class_count": 0,
+          "documented_ratio": 1.125,
+          "avg_docstring_length": 143.44
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.0,
+          "spacing_consistency": 0.639
+        },
+        "modern_syntax": {
+          "ai_indicators": 1.0,
+          "modern_features": 16,
+          "legacy_features": 0,
+          "modern_ratio": 1.0
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.8,
+          "ai_phrase_count": 26,
+          "obvious_comment_count": 25,
+          "total_comments": 41,
+          "ai_phrase_ratio": 0.634,
+          "obvious_ratio": 0.61
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.15,
+          "none_checks": 1,
+          "type_checks": 3,
+          "try_blocks": 0,
+          "assertions": 0,
+          "repeated_conditions": 0,
+          "defensive_ratio": 0.066
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.30000000000000004,
+          "textbook_pattern_count": 3,
+          "verbose_indicators": 1,
+          "textbook_ratio": 0.0199
+        },
+        "over_modularization": {
+          "ai_indicators": 0.15,
+          "total_functions": 8,
+          "small_function_count": 2,
+          "small_function_ratio": 0.25,
+          "helper_function_count": 3,
+          "helper_ratio": 0.375,
+          "avg_function_size": 10.5
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.6000000000000001,
+          "naming_consistency": 1.0,
+          "spacing_consistency": 0.958,
+          "comment_style_consistency": 1.0,
+          "indent_consistency": 0.925,
+          "perfect_consistency_count": 2
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.5,
+          "missing_quirk_count": 5,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": false,
+          "has_temp_vars": false,
+          "has_debug_statements": false,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.4,
+          "indent_perfection": 1.0,
+          "line_length_consistency": 0.695,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 1.0,
+          "perfection_count": 3
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.6,
+          "obvious_comment_count": 24,
+          "total_comments": 41,
+          "obvious_ratio": 0.585
+        }
+      },
+      "verdict": "POSSIBLY AI-ASSISTED",
+      "detected_patterns": {
+        "obvious_comments": [
+          "Verify that: # Verify that the input is not empty",
+          "Return result: # Return the result",
+          "Initialize variable: # Initialize the result dictionary",
+          "Loop through: # Loop through the user data",
+          "Get variable: # Get the value",
+          "Check if: # Check if the value is not None",
+          "Return result: # Return the result",
+          "Verify that: # Verify that scores is a list",
+          "Initialize variable: # Initialize the total",
+          "Loop through: # Loop through the scores"
+        ],
+        "ai_phrases": [
+          "# Check that the input is not None",
+          "# Ensure that the input is a string",
+          "# Verify that the input is not empty",
+          "# Return the result",
+          "# Initialize the result dictionary",
+          "# Check that user_data is not None",
+          "# Ensure that user_data is a dictionary",
+          "# Loop through the user data",
+          "# Return the result",
+          "# Check that scores is not None"
+        ],
+        "defensive_patterns": [
+          "None check: if value is not None"
+        ],
+        "textbook_patterns": [
+          "len() == 0 instead of not",
+          "range(len()) instead of enumerate"
+        ],
+        "small_functions": [
+          "_helper_format_name (3 lines)",
+          "_helper_calculate_age (3 lines)"
+        ],
+        "missing_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ],
+        "obvious_comment_examples": [
+          "[Line 23] Validation comment: # Ensure that the input is a string",
+          "[Line 27] Verification: # Verify that the input is not empty",
+          "[Line 31] Return statement: # Return the result",
+          "[Line 45] Initialize statement: # Initialize the result dictionary",
+          "[Line 52] Validation comment: # Ensure that user_data is a dictionary",
+          "[Line 56] Loop statement: # Loop through the user data",
+          "[Line 58] Get operation: # Get the value",
+          "[Line 61] Condition check: # Check if the value is not None",
+          "[Line 66] Return statement: # Return the result",
+          "[Line 84] Verification: # Verify that scores is a list",
+          "[Line 92] Initialize statement: # Initialize the total",
+          "[Line 95] Loop statement: # Loop through the scores",
+          "[Line 97] Increment statement: # Increment the total",
+          "[Line 103] Return statement: # Return the result",
+          "[Line 124] Get operation: # Get the length of the list"
+        ]
+      }
+    },
+    {
+      "file_path": "github_repo_scanner.py",
+      "ai_probability": 17.53,
+      "human_probability": 82.47,
+      "confidence": "MEDIUM",
+      "indicators": {
+        "perfect_formatting": true,
+        "modern_syntax_heavy": true,
+        "unnaturally_perfect_consistency": true,
+        "obvious_comment_examples": [
+          "[Line 26] Import statement: # Import the existing detector",
+          "[Line 319] Get operation: # Get actual branch name"
+        ],
+        "defensive_pattern_examples": [
+          "Many try blocks: 6",
+          "Repeated conditions: 2"
+        ],
+        "small_function_examples": [
+          "__init__ (3 lines)",
+          "_log (2 lines)",
+          "generate_json_report (4 lines)"
+        ],
+        "missing_human_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No commented-out code"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.0,
+          "avg_identifier_length": 5.93,
+          "verbose_count": 4,
+          "abbreviated_count": 63,
+          "descriptive_count": 0
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.3,
+          "comment_ratio": 0.044,
+          "formal_comments": 29,
+          "informal_comments": 0,
+          "avg_comment_length": 36.16
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 0.98,
+          "blank_line_ratio": 0.163
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.0,
+          "avg_line_length": 30.04,
+          "control_structures": 111,
+          "nesting_indicators": 60
+        },
+        "error_handling": {
+          "ai_indicators": 0.2,
+          "try_blocks": 6,
+          "except_blocks": 7,
+          "null_checks": 0,
+          "error_handling_ratio": 0.013
+        },
+        "documentation": {
+          "ai_indicators": 0.7,
+          "docstring_count": 29,
+          "function_count": 21,
+          "class_count": 3,
+          "documented_ratio": 1.208,
+          "avg_docstring_length": 643.79
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.0,
+          "spacing_consistency": 0.16
+        },
+        "modern_syntax": {
+          "ai_indicators": 0.9523809523809523,
+          "modern_features": 40,
+          "legacy_features": 2,
+          "modern_ratio": 0.952
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.0,
+          "ai_phrase_count": 0,
+          "obvious_comment_count": 2,
+          "total_comments": 43,
+          "ai_phrase_ratio": 0.0,
+          "obvious_ratio": 0.047
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.0,
+          "none_checks": 0,
+          "type_checks": 0,
+          "try_blocks": 6,
+          "assertions": 0,
+          "repeated_conditions": 2,
+          "defensive_ratio": 0.016
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.0,
+          "textbook_pattern_count": 0,
+          "verbose_indicators": 0,
+          "textbook_ratio": 0.0
+        },
+        "over_modularization": {
+          "ai_indicators": 0.0,
+          "total_functions": 21,
+          "small_function_count": 3,
+          "small_function_ratio": 0.143,
+          "helper_function_count": 4,
+          "helper_ratio": 0.19,
+          "avg_function_size": 41.5
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.4,
+          "naming_consistency": 1.0,
+          "spacing_consistency": 0.302,
+          "comment_style_consistency": 1.0,
+          "indent_consistency": 0.871,
+          "perfect_consistency_count": 2
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.0,
+          "missing_quirk_count": 2,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": false,
+          "has_temp_vars": true,
+          "has_debug_statements": true,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.0,
+          "indent_perfection": 0.98,
+          "line_length_consistency": 0.545,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 0.0,
+          "perfection_count": 1
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.0,
+          "obvious_comment_count": 2,
+          "total_comments": 43,
+          "obvious_ratio": 0.047
+        }
+      },
+      "verdict": "LIKELY HUMAN-WRITTEN",
+      "detected_patterns": {
+        "obvious_comments": [
+          "Import statement: # Import the existing detector",
+          "Get variable: # Get actual branch name"
+        ],
+        "ai_phrases": [],
+        "defensive_patterns": [
+          "Many try blocks: 6",
+          "Repeated conditions: 2"
+        ],
+        "textbook_patterns": [],
+        "small_functions": [
+          "__init__ (3 lines)",
+          "_log (2 lines)",
+          "generate_json_report (4 lines)"
+        ],
+        "missing_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No commented-out code"
+        ],
+        "obvious_comment_examples": [
+          "[Line 26] Import statement: # Import the existing detector",
+          "[Line 319] Get operation: # Get actual branch name"
+        ]
+      }
+    },
+    {
+      "file_path": "scan_example.py",
+      "ai_probability": 27.86,
+      "human_probability": 72.14,
+      "confidence": "MEDIUM",
+      "indicators": {
+        "perfect_formatting": true,
+        "modern_syntax_heavy": true,
+        "obvious_comments_detected": true,
+        "unnaturally_perfect_consistency": true,
+        "lacks_human_quirks": true,
+        "flawless_formatting": true,
+        "obvious_comment_examples": [
+          "[Line 11] Import statement: # Import the scanner",
+          "[Line 25] Initialize statement: # Initialize the scanner",
+          "[Line 75] Initialize statement: # Initialize the scanner",
+          "[Line 123] Initialize statement: # Initialize scanner in quiet mode"
+        ],
+        "ai_phrase_examples": [
+          "# Initialize the scanner",
+          "# Initialize the scanner"
+        ],
+        "defensive_pattern_examples": [
+          "Many try blocks: 4"
+        ],
+        "missing_human_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No commented-out code",
+          "No magic numbers with inline comments"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.0,
+          "avg_identifier_length": 6.39,
+          "verbose_count": 4,
+          "abbreviated_count": 6,
+          "descriptive_count": 0
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.3,
+          "comment_ratio": 0.169,
+          "formal_comments": 5,
+          "informal_comments": 0,
+          "avg_comment_length": 31.5
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 1.0,
+          "blank_line_ratio": 0.296
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.2,
+          "avg_line_length": 31.45,
+          "control_structures": 13,
+          "nesting_indicators": 2
+        },
+        "error_handling": {
+          "ai_indicators": 0.4,
+          "try_blocks": 4,
+          "except_blocks": 4,
+          "null_checks": 0,
+          "error_handling_ratio": 0.053
+        },
+        "documentation": {
+          "ai_indicators": 0.7,
+          "docstring_count": 5,
+          "function_count": 4,
+          "class_count": 0,
+          "documented_ratio": 1.25,
+          "avg_docstring_length": 122.6
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.0,
+          "spacing_consistency": 0.466
+        },
+        "modern_syntax": {
+          "ai_indicators": 1.0,
+          "modern_features": 2,
+          "legacy_features": 0,
+          "modern_ratio": 1.0
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.2,
+          "ai_phrase_count": 2,
+          "obvious_comment_count": 4,
+          "total_comments": 22,
+          "ai_phrase_ratio": 0.091,
+          "obvious_ratio": 0.182
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.0,
+          "none_checks": 0,
+          "type_checks": 0,
+          "try_blocks": 4,
+          "assertions": 0,
+          "repeated_conditions": 0,
+          "defensive_ratio": 0.026
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.0,
+          "textbook_pattern_count": 0,
+          "verbose_indicators": 0,
+          "textbook_ratio": 0.0
+        },
+        "over_modularization": {
+          "ai_indicators": 0.0,
+          "total_functions": 4,
+          "small_function_count": 0,
+          "small_function_ratio": 0.0,
+          "helper_function_count": 0,
+          "helper_ratio": 0.0,
+          "avg_function_size": 27.8
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.4,
+          "naming_consistency": 1.0,
+          "spacing_consistency": 0.635,
+          "comment_style_consistency": 1.0,
+          "indent_consistency": 0.932,
+          "perfect_consistency_count": 2
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.3,
+          "missing_quirk_count": 4,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": false,
+          "has_temp_vars": false,
+          "has_debug_statements": true,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.4,
+          "indent_perfection": 1.0,
+          "line_length_consistency": 0.611,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 1.0,
+          "perfection_count": 3
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.2,
+          "obvious_comment_count": 4,
+          "total_comments": 22,
+          "obvious_ratio": 0.182
+        }
+      },
+      "verdict": "LIKELY HUMAN-WRITTEN",
+      "detected_patterns": {
+        "obvious_comments": [
+          "Import statement: # Import the scanner",
+          "Initialize variable: # Initialize the scanner",
+          "Initialize variable: # Initialize the scanner",
+          "Initialize variable: # Initialize scanner in quiet mode"
+        ],
+        "ai_phrases": [
+          "# Initialize the scanner",
+          "# Initialize the scanner"
+        ],
+        "defensive_patterns": [
+          "Many try blocks: 4"
+        ],
+        "textbook_patterns": [],
+        "small_functions": [],
+        "missing_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No commented-out code",
+          "No magic numbers with inline comments"
+        ],
+        "obvious_comment_examples": [
+          "[Line 11] Import statement: # Import the scanner",
+          "[Line 25] Initialize statement: # Initialize the scanner",
+          "[Line 75] Initialize statement: # Initialize the scanner",
+          "[Line 123] Initialize statement: # Initialize scanner in quiet mode"
+        ]
+      }
+    },
+    {
+      "file_path": "ai_code_detector.py",
+      "ai_probability": 20.82,
+      "human_probability": 79.18,
+      "confidence": "MEDIUM-HIGH",
+      "indicators": {
+        "perfect_formatting": true,
+        "modern_syntax_heavy": true,
+        "unnaturally_perfect_consistency": true,
+        "textbook_pattern_examples": [
+          "Bubble sort pattern",
+          "i = i + 1 instead of i += 1"
+        ],
+        "defensive_pattern_examples": [
+          "Excessive type checks: 6 isinstance calls",
+          "Repeated conditions: 9"
+        ],
+        "missing_human_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No commented-out code"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.0,
+          "avg_identifier_length": 6.18,
+          "verbose_count": 4,
+          "abbreviated_count": 144,
+          "descriptive_count": 5
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.3,
+          "comment_ratio": 0.039,
+          "formal_comments": 18,
+          "informal_comments": 0,
+          "avg_comment_length": 45.75
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 0.974,
+          "blank_line_ratio": 0.18
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.0,
+          "avg_line_length": 33.41,
+          "control_structures": 310,
+          "nesting_indicators": 255
+        },
+        "error_handling": {
+          "ai_indicators": 0.2,
+          "try_blocks": 1,
+          "except_blocks": 1,
+          "null_checks": 0,
+          "error_handling_ratio": 0.001
+        },
+        "documentation": {
+          "ai_indicators": 0.5,
+          "docstring_count": 18,
+          "function_count": 27,
+          "class_count": 3,
+          "documented_ratio": 0.6,
+          "avg_docstring_length": 2579.33
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.0,
+          "spacing_consistency": 0.214
+        },
+        "modern_syntax": {
+          "ai_indicators": 0.9818181818181818,
+          "modern_features": 54,
+          "legacy_features": 1,
+          "modern_ratio": 0.982
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.0,
+          "ai_phrase_count": 0,
+          "obvious_comment_count": 0,
+          "total_comments": 67,
+          "ai_phrase_ratio": 0.0,
+          "obvious_ratio": 0.0
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.2,
+          "none_checks": 0,
+          "type_checks": 6,
+          "try_blocks": 1,
+          "assertions": 0,
+          "repeated_conditions": 9,
+          "defensive_ratio": 0.008
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.5,
+          "textbook_pattern_count": 2,
+          "verbose_indicators": 3,
+          "textbook_ratio": 0.0011
+        },
+        "over_modularization": {
+          "ai_indicators": 0.0,
+          "total_functions": 27,
+          "small_function_count": 0,
+          "small_function_ratio": 0.0,
+          "helper_function_count": 0,
+          "helper_ratio": 0.0,
+          "avg_function_size": 61.4
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.4,
+          "naming_consistency": 0.989,
+          "spacing_consistency": 0.422,
+          "comment_style_consistency": 0.985,
+          "indent_consistency": 0.919,
+          "perfect_consistency_count": 2
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.0,
+          "missing_quirk_count": 2,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": false,
+          "has_temp_vars": true,
+          "has_debug_statements": true,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.0,
+          "indent_perfection": 0.974,
+          "line_length_consistency": 0.563,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 0.0,
+          "perfection_count": 1
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.0,
+          "obvious_comment_count": 0,
+          "total_comments": 67,
+          "obvious_ratio": 0.0
+        }
+      },
+      "verdict": "LIKELY HUMAN-WRITTEN",
+      "detected_patterns": {
+        "obvious_comments": [],
+        "ai_phrases": [],
+        "defensive_patterns": [
+          "Excessive type checks: 6 isinstance calls",
+          "Repeated conditions: 9"
+        ],
+        "textbook_patterns": [
+          "Bubble sort pattern",
+          "i = i + 1 instead of i += 1"
+        ],
+        "small_functions": [],
+        "missing_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No commented-out code"
+        ],
+        "obvious_comment_examples": []
+      }
+    },
+    {
+      "file_path": "test_samples/human_written_sample.py",
+      "ai_probability": 13.41,
+      "human_probability": 86.59,
+      "confidence": "MEDIUM-HIGH",
+      "indicators": {
+        "perfect_formatting": true,
+        "over_modularized": true,
+        "lacks_human_quirks": true,
+        "flawless_formatting": true,
+        "small_function_examples": [
+          "__init__ (2 lines)",
+          "check (1 lines)",
+          "logout (2 lines)"
+        ],
+        "missing_human_quirks": [
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No magic numbers with inline comments",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.0,
+          "avg_identifier_length": 4.27,
+          "verbose_count": 0,
+          "abbreviated_count": 2,
+          "descriptive_count": 0
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.0,
+          "comment_ratio": 0.115,
+          "formal_comments": 0,
+          "informal_comments": 2,
+          "avg_comment_length": 38.33
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 1.0,
+          "blank_line_ratio": 0.241
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.0,
+          "avg_line_length": 24.52,
+          "control_structures": 5,
+          "nesting_indicators": 8
+        },
+        "error_handling": {
+          "ai_indicators": 0.0,
+          "try_blocks": 0,
+          "except_blocks": 0,
+          "null_checks": 0,
+          "error_handling_ratio": 0.0
+        },
+        "documentation": {
+          "ai_indicators": 0.0,
+          "docstring_count": 0,
+          "function_count": 5,
+          "class_count": 1,
+          "documented_ratio": 0.0,
+          "avg_docstring_length": 0
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.3,
+          "spacing_consistency": 0.8
+        },
+        "modern_syntax": {
+          "ai_indicators": 0.5,
+          "modern_features": 0,
+          "legacy_features": 0,
+          "modern_ratio": 0.5
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.0,
+          "ai_phrase_count": 0,
+          "obvious_comment_count": 0,
+          "total_comments": 3,
+          "ai_phrase_ratio": 0.0,
+          "obvious_ratio": 0.0
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.0,
+          "none_checks": 0,
+          "type_checks": 0,
+          "try_blocks": 0,
+          "assertions": 0,
+          "repeated_conditions": 0,
+          "defensive_ratio": 0.0
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.0,
+          "textbook_pattern_count": 0,
+          "verbose_indicators": 0,
+          "textbook_ratio": 0.0
+        },
+        "over_modularization": {
+          "ai_indicators": 0.4,
+          "total_functions": 5,
+          "small_function_count": 3,
+          "small_function_ratio": 0.6,
+          "helper_function_count": 0,
+          "helper_ratio": 0.0,
+          "avg_function_size": 3.6
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.0,
+          "naming_consistency": 0.5,
+          "spacing_consistency": 1.0,
+          "comment_style_consistency": 1.0,
+          "indent_consistency": 1.0,
+          "perfect_consistency_count": 0
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.0,
+          "missing_quirk_count": 5,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": true,
+          "has_temp_vars": false,
+          "has_debug_statements": false,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.6,
+          "indent_perfection": 1.0,
+          "line_length_consistency": 1.0,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 1.0,
+          "perfection_count": 4
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.0,
+          "obvious_comment_count": 0,
+          "total_comments": 3,
+          "obvious_ratio": 0.0
+        }
+      },
+      "verdict": "LIKELY HUMAN-WRITTEN",
+      "detected_patterns": {
+        "obvious_comments": [],
+        "ai_phrases": [],
+        "defensive_patterns": [],
+        "textbook_patterns": [],
+        "small_functions": [
+          "__init__ (2 lines)",
+          "check (1 lines)",
+          "logout (2 lines)"
+        ],
+        "missing_quirks": [
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No magic numbers with inline comments",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ],
+        "obvious_comment_examples": []
+      }
+    },
+    {
+      "file_path": "test_samples/ai_generated_sample.py",
+      "ai_probability": 22.43,
+      "human_probability": 77.57,
+      "confidence": "MEDIUM",
+      "indicators": {
+        "perfect_formatting": true,
+        "modern_syntax_heavy": true,
+        "lacks_human_quirks": true,
+        "small_function_examples": [
+          "_generate_secure_session_token (4 lines)"
+        ],
+        "missing_human_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No magic numbers with inline comments",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ]
+      },
+      "detailed_scores": {
+        "naming_analysis": {
+          "ai_indicators": 0.2,
+          "avg_identifier_length": 7.52,
+          "verbose_count": 2,
+          "abbreviated_count": 23,
+          "descriptive_count": 6
+        },
+        "comment_analysis": {
+          "ai_indicators": 0.3,
+          "comment_ratio": 0.0,
+          "formal_comments": 8,
+          "informal_comments": 0,
+          "avg_comment_length": 0
+        },
+        "structure_analysis": {
+          "ai_indicators": 0.4,
+          "indent_consistency": 1.0,
+          "blank_line_ratio": 0.231
+        },
+        "complexity_analysis": {
+          "ai_indicators": 0.0,
+          "avg_line_length": 28.08,
+          "control_structures": 12,
+          "nesting_indicators": 12
+        },
+        "error_handling": {
+          "ai_indicators": 0.2,
+          "try_blocks": 3,
+          "except_blocks": 4,
+          "null_checks": 0,
+          "error_handling_ratio": 0.045
+        },
+        "documentation": {
+          "ai_indicators": 0.7,
+          "docstring_count": 8,
+          "function_count": 6,
+          "class_count": 1,
+          "documented_ratio": 1.143,
+          "avg_docstring_length": 243.25
+        },
+        "formatting_consistency": {
+          "ai_indicators": 0.0,
+          "spacing_consistency": 0.667
+        },
+        "modern_syntax": {
+          "ai_indicators": 1.0,
+          "modern_features": 16,
+          "legacy_features": 0,
+          "modern_ratio": 1.0
+        },
+        "enhanced_comment_analysis": {
+          "ai_indicators": 0.0,
+          "ai_phrase_count": 0,
+          "obvious_comment_count": 0,
+          "total_comments": 0,
+          "ai_phrase_ratio": 0.0,
+          "obvious_ratio": 0.0
+        },
+        "defensive_coding": {
+          "ai_indicators": 0.0,
+          "none_checks": 0,
+          "type_checks": 0,
+          "try_blocks": 3,
+          "assertions": 0,
+          "repeated_conditions": 0,
+          "defensive_ratio": 0.026
+        },
+        "textbook_algorithms": {
+          "ai_indicators": 0.0,
+          "textbook_pattern_count": 0,
+          "verbose_indicators": 0,
+          "textbook_ratio": 0.0
+        },
+        "over_modularization": {
+          "ai_indicators": 0.0,
+          "total_functions": 6,
+          "small_function_count": 1,
+          "small_function_ratio": 0.167,
+          "helper_function_count": 0,
+          "helper_ratio": 0.0,
+          "avg_function_size": 20.0
+        },
+        "perfect_consistency": {
+          "ai_indicators": 0.2,
+          "naming_consistency": 1.0,
+          "spacing_consistency": 0.889,
+          "comment_style_consistency": 0.5,
+          "indent_consistency": 0.929,
+          "perfect_consistency_count": 1
+        },
+        "contextual_quirks": {
+          "ai_indicators": 0.5,
+          "missing_quirk_count": 6,
+          "total_quirk_checks": 6,
+          "has_todo_fixme": false,
+          "has_temp_vars": false,
+          "has_debug_statements": false,
+          "has_commented_code": false
+        },
+        "formatting_perfection": {
+          "ai_indicators": 0.2,
+          "indent_perfection": 1.0,
+          "line_length_consistency": 0.562,
+          "no_trailing_whitespace": true,
+          "blank_line_regularity": 0.745,
+          "perfection_count": 2
+        },
+        "obvious_comments": {
+          "ai_indicators": 0.0,
+          "obvious_comment_count": 0,
+          "total_comments": 0,
+          "obvious_ratio": 0.0
+        }
+      },
+      "verdict": "LIKELY HUMAN-WRITTEN",
+      "detected_patterns": {
+        "obvious_comments": [],
+        "ai_phrases": [],
+        "defensive_patterns": [],
+        "textbook_patterns": [],
+        "small_functions": [
+          "_generate_secure_session_token (4 lines)"
+        ],
+        "missing_quirks": [
+          "No TODO/FIXME/HACK/NOTE/XXX comments",
+          "No temporary variable names (tmp, temp, foo, bar)",
+          "No debugging statements (print, console.log)",
+          "No commented-out code",
+          "No magic numbers with inline comments",
+          "No common abbreviations (cfg, ctx, env, msg, etc.)"
+        ],
+        "obvious_comment_examples": []
+      }
+    }
+  ],
+  "summary": {
+    "total_files_in_repo": 6,
+    "files_successfully_analyzed": 6,
+    "files_with_errors": 0,
+    "average_ai_probability": 23.82,
+    "median_ai_probability": 22.43,
+    "high_risk_count": 0,
+    "verdict_summary": {
+      "likely_ai": 0,
+      "possibly_ai": 1,
+      "mixed": 0,
+      "likely_human": 5,
+      "inconclusive": 0
+    }
+  }
+}

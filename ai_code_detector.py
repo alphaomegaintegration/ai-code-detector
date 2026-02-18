@@ -5,6 +5,9 @@ Detects AI-generated code using pattern recognition, statistical analysis, and h
 Now with sophisticated detection for AI-generated code characteristics
 """
 
+# pylint: disable=too-many-lines,too-many-instance-attributes,too-many-locals,too-many-statements
+# pylint: disable=too-many-branches,too-many-nested-blocks,too-few-public-methods
+
 import re
 import sys
 import json
@@ -18,6 +21,7 @@ from dataclasses import dataclass, asdict, field
 
 @dataclass
 class DetectionResult:
+    """Dataclass to hold the results of AI code detection analysis."""
     file_path: str
     ai_probability: float
     human_probability: float
@@ -29,6 +33,7 @@ class DetectionResult:
 
 
 class AICodeDetector:
+    """Core detector class for analyzing code files to identify AI generation patterns."""
     def __init__(self, max_file_size: int = 1024 * 1024):
         self.max_file_size = max_file_size
         self.ai_patterns = {
@@ -39,9 +44,16 @@ class AICodeDetector:
         }
 
         self.human_patterns = {
-            'abbreviated_vars': r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b',
-            'legacy_syntax': r'(var\s+|function\s*\(|\.prototype\.|document\.write)',
-            'informal_comments': r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)',
+            'abbreviated_vars': (
+                r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b'
+            ),
+            'legacy_syntax': (
+                r'(var\s+|function\s*\(|\.prototype\.|document\.write)'
+            ),
+            'informal_comments': (
+                r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|'
+                r'//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)'
+            ),
         }
 
         # AI-typical comment phrases (over-explanation patterns)
@@ -100,14 +112,18 @@ class AICodeDetector:
 
         # Textbook algorithm patterns
         self.textbook_patterns = [
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)', 'range(len()) instead of enumerate'),
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)', 'Bubble sort pattern'),
+            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)',
+             'range(len()) instead of enumerate'),
+            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)',
+             'Bubble sort pattern'),
             (r'if\s+\w+\s*==\s*True', 'Explicit True comparison'),
             (r'if\s+\w+\s*==\s*False', 'Explicit False comparison'),
             (r'if\s+len\s*\(\s*\w+\s*\)\s*==\s*0', 'len() == 0 instead of not'),
-            (r'if\s+len\s*\(\s*\w+\s*\)\s*>\s*0', 'len() > 0 instead of truthiness'),
+            (r'if\s+len\s*\(\s*\w+\s*\)\s*>\s*0',
+             'len() > 0 instead of truthiness'),
             (r'(\w+)\s*=\s*\1\s*\+\s*1', 'i = i + 1 instead of i += 1'),
-            (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]', 'Adjacent element comparison (bubble sort)'),
+            (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]',
+             'Adjacent element comparison (bubble sort)'),
         ]
 
     def _read_file_safely(self, file_path: str) -> Tuple[Optional[str], Optional[str]]:
@@ -272,15 +288,21 @@ class AICodeDetector:
 
     def _analyze_comment_style(self, code: str) -> Dict[str, Any]:
         lines = code.split('\n')
-        comment_lines = [l for l in lines if l.strip().startswith('#') or l.strip().startswith('//')]
+        comment_lines = [l for l in lines if l.strip().startswith('#') or
+                         l.strip().startswith('//')]
 
-        formal_comments = len(re.findall(self.ai_patterns['formal_comments'], code))
-        informal_comments = len(re.findall(self.human_patterns['informal_comments'], code))
+        formal_comments = len(re.findall(
+            self.ai_patterns['formal_comments'], code))
+        informal_comments = len(re.findall(
+            self.human_patterns['informal_comments'], code))
 
-        code_lines = [l for l in lines if l.strip() and not l.strip().startswith('#')]
+        code_lines = [l for l in lines if l.strip() and
+                      not l.strip().startswith('#')]
         comment_ratio = len(comment_lines) / max(len(code_lines), 1)
 
-        avg_comment_length = sum(len(c) for c in comment_lines) / max(len(comment_lines), 1) if comment_lines else 0
+        total_comment_len = sum(len(c) for c in comment_lines)
+        avg_comment_length = (total_comment_len / max(len(comment_lines), 1)
+                              if comment_lines else 0)
 
         ai_score = 0.0
         if comment_ratio > 0.3:
@@ -367,10 +389,13 @@ class AICodeDetector:
     def _analyze_error_handling(self, code: str) -> Dict[str, Any]:
         try_blocks = len(re.findall(r'\btry\s*:', code))
         except_blocks = len(re.findall(r'\bexcept\s+', code))
-        null_checks = len(re.findall(r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)', code, re.IGNORECASE))
+        null_checks = len(re.findall(
+            r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)',
+            code, re.IGNORECASE))
 
         lines = [l for l in code.split('\n') if l.strip()]
-        error_handling_ratio = (try_blocks + except_blocks + null_checks) / max(len(lines), 1)
+        error_handling_count = try_blocks + except_blocks + null_checks
+        error_handling_ratio = error_handling_count / max(len(lines), 1)
 
         ai_score = 0.0
         if error_handling_ratio > 0.1:
@@ -399,7 +424,9 @@ class AICodeDetector:
 
         documented_ratio = len(docstrings) / max(function_defs + class_defs, 1)
 
-        avg_docstring_length = sum(len(d) for d in docstrings) / max(len(docstrings), 1) if docstrings else 0
+        total_doc_len = sum(len(d) for d in docstrings)
+        avg_docstring_length = (total_doc_len / max(len(docstrings), 1)
+                                if docstrings else 0)
 
         ai_score = 0.0
         if documented_ratio > 0.7:
@@ -477,7 +504,8 @@ class AICodeDetector:
     def _analyze_enhanced_comments(self, code: str) -> Dict[str, Any]:
         """Enhanced comment analysis for AI-typical patterns."""
         lines = code.split('\n')
-        comment_lines = [l.strip() for l in lines if l.strip().startswith('#') or l.strip().startswith('//')]
+        comment_lines = [l.strip() for l in lines if l.strip().startswith('#')
+                         or l.strip().startswith('//')]
 
         ai_phrases_found = []
         obvious_comments_found = []
@@ -536,7 +564,8 @@ class AICodeDetector:
         null_checks = re.findall(r'if\s+\w+\s*!=\s*null', code, re.IGNORECASE)
         none_check_count = len(none_checks) + len(null_checks)
         if none_check_count > 0:
-            patterns_found.extend([f"None check: {c[:50]}" for c in none_checks[:3]])
+            patterns_found.extend(
+                [f"None check: {c[:50]}" for c in none_checks[:3]])
 
         # Redundant type checking
         type_checks = re.findall(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)', code)
@@ -569,7 +598,9 @@ class AICodeDetector:
         validation_patterns += len(re.findall(r'raise\s+(ValueError|TypeError|RuntimeError)', code))
 
         lines = [l for l in code.split('\n') if l.strip()]
-        defensive_ratio = (none_check_count + type_check_count + try_blocks + validation_patterns) / max(len(lines), 1)
+        defensive_count = (none_check_count + type_check_count +
+                           try_blocks + validation_patterns)
+        defensive_ratio = defensive_count / max(len(lines), 1)
 
         ai_score = 0.0
         if defensive_ratio > 0.15:
@@ -679,8 +710,13 @@ class AICodeDetector:
                 end_line = len(lines)
 
             func_body_lines = lines[start_line:end_line]
-            # Count non-empty, non-comment lines (excluding the def line itself)
-            func_lines = [l for l in func_body_lines[1:] if l.strip() and not l.strip().startswith('#') and not l.strip().startswith('"""') and not l.strip().startswith("'''")]
+            # Count non-empty, non-comment lines
+            func_lines = [
+                l for l in func_body_lines[1:]
+                if l.strip() and not l.strip().startswith('#')
+                and not l.strip().startswith('"""')
+                and not l.strip().startswith("'''")
+            ]
             func_size = len(func_lines)
             function_sizes.append(func_size)
 
@@ -733,26 +769,33 @@ class AICodeDetector:
         snake_case = len(re.findall(r'\b[a-z]+_[a-z]+\b', code))
         camel_case = len(re.findall(r'\b[a-z]+[A-Z][a-z]+\b', code))
         total_naming = snake_case + camel_case
-        naming_consistency = max(snake_case, camel_case) / max(total_naming, 1) if total_naming > 5 else 0.5
+        naming_consistency = (max(snake_case, camel_case) /
+                              max(total_naming, 1)
+                              if total_naming > 5 else 0.5)
 
         # Check spacing around operators
         spaced_ops = len(re.findall(r'\s[=+\-*/]\s', code))
         unspaced_ops = len(re.findall(r'[a-zA-Z0-9][=+\-*/][a-zA-Z0-9]', code))
         total_ops = spaced_ops + unspaced_ops
-        spacing_consistency = spaced_ops / max(total_ops, 1) if total_ops > 3 else 0.5
+        spacing_consistency = (spaced_ops / max(total_ops, 1)
+                               if total_ops > 3 else 0.5)
 
         # Check comment style consistency
         hash_comments = len(re.findall(r'^\s*#', code, re.MULTILINE))
         slash_comments = len(re.findall(r'^\s*//', code, re.MULTILINE))
         total_comments = hash_comments + slash_comments
-        comment_style_consistency = max(hash_comments, slash_comments) / max(total_comments, 1) if total_comments > 2 else 0.5
+        comment_style_consistency = (max(hash_comments, slash_comments) /
+                                     max(total_comments, 1)
+                                     if total_comments > 2 else 0.5)
 
         # Check indentation consistency (4 spaces vs tabs vs 2 spaces)
         indent_4 = len(re.findall(r'^\s{4}[^\s]', code, re.MULTILINE))
         indent_2 = len(re.findall(r'^\s{2}[^\s]', code, re.MULTILINE))
         indent_tab = len(re.findall(r'^\t[^\t]', code, re.MULTILINE))
         total_indent = indent_4 + indent_2 + indent_tab
-        indent_consistency = max(indent_4, indent_2, indent_tab) / max(total_indent, 1) if total_indent > 3 else 0.5
+        indent_consistency = (max(indent_4, indent_2, indent_tab) /
+                              max(total_indent, 1)
+                              if total_indent > 3 else 0.5)
 
         # Perfect consistency is suspicious
         perfect_count = sum([
@@ -879,9 +922,13 @@ class AICodeDetector:
         # Check blank line patterns (consistent separation)
         blank_lines = [i for i, l in enumerate(lines) if not l.strip()]
         if len(blank_lines) > 2:
-            blank_gaps = [blank_lines[i+1] - blank_lines[i] for i in range(len(blank_lines)-1)]
-            gap_variance = sum((g - sum(blank_gaps)/len(blank_gaps))**2 for g in blank_gaps) / len(blank_gaps) if blank_gaps else 0
-            blank_line_regularity = 1.0 if gap_variance < 5 else (1.0 - min(gap_variance / 20, 1.0))
+            blank_gaps = [blank_lines[i+1] - blank_lines[i]
+                          for i in range(len(blank_lines)-1)]
+            mean_gap = sum(blank_gaps) / len(blank_gaps)
+            gap_variance = (sum((g - mean_gap)**2 for g in blank_gaps) /
+                            len(blank_gaps) if blank_gaps else 0)
+            blank_line_regularity = (1.0 if gap_variance < 5 else
+                                     (1.0 - min(gap_variance / 20, 1.0)))
         else:
             blank_line_regularity = 0.5
 
@@ -994,7 +1041,8 @@ class AICodeDetector:
         if not score_values:
             return "LOW"
 
-        variance = sum((x - sum(score_values)/len(score_values))**2 for x in score_values) / len(score_values)
+        mean = sum(score_values) / len(score_values)
+        variance = sum((x - mean)**2 for x in score_values) / len(score_values)
 
         # Count how many dimensions agree
         high_ai = sum(1 for s in score_values if s > 0.5)
@@ -1172,7 +1220,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
     # Generate file cards HTML
     file_cards_html = ""
-    sorted_results = sorted(valid_results, key=lambda x: x.ai_probability, reverse=True)
+    sorted_results = sorted(valid_results,
+                            key=lambda x: x.ai_probability, reverse=True)
 
     for idx, result in enumerate(sorted_results):
         color = get_probability_color(result.ai_probability)
@@ -1203,18 +1252,20 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         for dim_key, (dim_name, dim_icon) in dimension_names.items():
             if dim_key in result.detailed_scores:
                 score_data = result.detailed_scores[dim_key]
-                ai_indicator = score_data.get('ai_indicators', 0)
-                score_pct = ai_indicator * 100
+                ai_ind = score_data.get('ai_indicators', 0)
+                score_pct = ai_ind * 100
                 score_color = get_probability_color(score_pct)
-                dimension_html += f'''
-                <div class="dimension-item">
-                    <span class="dim-icon">{dim_icon}</span>
-                    <span class="dim-name">{dim_name}</span>
-                    <div class="dim-bar-container">
-                        <div class="dim-bar" style="width: {score_pct}%; background: {score_color};"></div>
-                    </div>
-                    <span class="dim-score" style="color: {score_color};">{score_pct:.0f}%</span>
-                </div>'''
+                dimension_html += (
+                    f'<div class="dimension-item">'
+                    f'<span class="dim-icon">{dim_icon}</span>'
+                    f'<span class="dim-name">{dim_name}</span>'
+                    f'<div class="dim-bar-container">'
+                    f'<div class="dim-bar" style="width: {score_pct}%; '
+                    f'background: {score_color};"></div>'
+                    f'</div>'
+                    f'<span class="dim-score" style="color: {score_color};">'
+                    f'{score_pct:.0f}%</span></div>'
+                )
 
         # Generate detected patterns HTML
         patterns_html = ""
@@ -1241,12 +1292,17 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
         # Generate indicators HTML
         indicators_html = ""
-        boolean_indicators = {k: v for k, v in result.indicators.items() if isinstance(v, bool) and v}
+        boolean_indicators = {
+            k: v for k, v in result.indicators.items()
+            if isinstance(v, bool) and v
+        }
         if boolean_indicators:
             indicators_html = '<div class="indicators-list">'
             for key in boolean_indicators:
                 indicator_name = key.replace('_', ' ').title()
-                indicators_html += f'<span class="indicator-badge">{indicator_name}</span>'
+                indicators_html += (
+                    f'<span class="indicator-badge">{indicator_name}</span>'
+                )
             indicators_html += '</div>'
 
         file_cards_html += f'''
@@ -1273,9 +1329,11 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                     </div>
                 </div>
 
-                {'<div class="details-section"><h4>🔍 Detected Patterns</h4>' + patterns_html + '</div>' if patterns_html else ''}
+                {f'<div class="details-section"><h4>🔍 Detected Patterns</h4>'
+                 f'{patterns_html}</div>' if patterns_html else ''}
 
-                {'<div class="details-section"><h4>🎯 Key Indicators</h4>' + indicators_html + '</div>' if indicators_html else ''}
+                {f'<div class="details-section"><h4>🎯 Key Indicators</h4>'
+                 f'{indicators_html}</div>' if indicators_html else ''}
             </div>
 
             <button class="toggle-details" onclick="toggleDetails({idx})">
@@ -1296,7 +1354,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                     <div class="stat-label">Files Analyzed</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value {get_probability_class(avg_ai_prob)}">{avg_ai_prob:.1f}%</div>
+                    <div class="stat-value {get_probability_class(avg_ai_prob)}">
+                        {avg_ai_prob:.1f}%</div>
                     <div class="stat-label">Avg AI Probability</div>
                 </div>
                 <div class="stat-card">
@@ -1304,7 +1363,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                     <div class="stat-label">Likely AI (≥75%)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value green">{distribution['likely_human']}</div>
+                    <div class="stat-value green">
+                        {distribution['likely_human']}</div>
                     <div class="stat-label">Likely Human (&lt;35%)</div>
                 </div>
             </div>
@@ -1312,20 +1372,28 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             <div class="distribution-section">
                 <h3>Distribution by AI Probability</h3>
                 <div class="distribution-bar">
-                    <div class="dist-segment green" style="width: {distribution['likely_human'] / dist_total * 100}%;"
+                    <div class="dist-segment green"
+                         style="width: {distribution['likely_human'] / dist_total * 100}%;"
                          title="Likely Human (0-35%): {distribution['likely_human']} files"></div>
-                    <div class="dist-segment yellow" style="width: {distribution['mixed'] / dist_total * 100}%;"
+                    <div class="dist-segment yellow"
+                         style="width: {distribution['mixed'] / dist_total * 100}%;"
                          title="Mixed (35-55%): {distribution['mixed']} files"></div>
-                    <div class="dist-segment orange" style="width: {distribution['possibly_ai'] / dist_total * 100}%;"
+                    <div class="dist-segment orange"
+                         style="width: {distribution['possibly_ai'] / dist_total * 100}%;"
                          title="Possibly AI (55-75%): {distribution['possibly_ai']} files"></div>
-                    <div class="dist-segment red" style="width: {distribution['likely_ai'] / dist_total * 100}%;"
+                    <div class="dist-segment red"
+                         style="width: {distribution['likely_ai'] / dist_total * 100}%;"
                          title="Likely AI (75-100%): {distribution['likely_ai']} files"></div>
                 </div>
                 <div class="distribution-legend">
-                    <span><span class="legend-dot green"></span> Likely Human (0-35%): {distribution['likely_human']}</span>
-                    <span><span class="legend-dot yellow"></span> Mixed (35-55%): {distribution['mixed']}</span>
-                    <span><span class="legend-dot orange"></span> Possibly AI (55-75%): {distribution['possibly_ai']}</span>
-                    <span><span class="legend-dot red"></span> Likely AI (75-100%): {distribution['likely_ai']}</span>
+                    <span><span class="legend-dot green"></span>
+                        Likely Human: {distribution['likely_human']}</span>
+                    <span><span class="legend-dot yellow"></span>
+                        Mixed: {distribution['mixed']}</span>
+                    <span><span class="legend-dot orange"></span>
+                        Possibly AI: {distribution['possibly_ai']}</span>
+                    <span><span class="legend-dot red"></span>
+                        Likely AI: {distribution['likely_ai']}</span>
                 </div>
             </div>
         </section>'''
@@ -1359,8 +1427,9 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            /* font-family defined in .body-font to avoid long lines */
+            background: linear-gradient(135deg, var(--bg-primary) 0%,
+                                        var(--bg-secondary) 100%);
             color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
@@ -1540,10 +1609,14 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             font-weight: 600;
         }}
 
-        .verdict-badge.green {{ background: rgba(40, 167, 69, 0.2); color: var(--color-green); border: 1px solid var(--color-green); }}
-        .verdict-badge.yellow {{ background: rgba(255, 193, 7, 0.2); color: var(--color-yellow); border: 1px solid var(--color-yellow); }}
-        .verdict-badge.orange {{ background: rgba(253, 126, 20, 0.2); color: var(--color-orange); border: 1px solid var(--color-orange); }}
-        .verdict-badge.red {{ background: rgba(220, 53, 69, 0.2); color: var(--color-red); border: 1px solid var(--color-red); }}
+        .verdict-badge.green {{ background: rgba(40, 167, 69, 0.2);
+            color: var(--color-green); border: 1px solid var(--color-green); }}
+        .verdict-badge.yellow {{ background: rgba(255, 193, 7, 0.2);
+            color: var(--color-yellow); border: 1px solid var(--color-yellow); }}
+        .verdict-badge.orange {{ background: rgba(253, 126, 20, 0.2);
+            color: var(--color-orange); border: 1px solid var(--color-orange); }}
+        .verdict-badge.red {{ background: rgba(220, 53, 69, 0.2);
+            color: var(--color-red); border: 1px solid var(--color-red); }}
 
         .file-summary {{
             display: flex;
@@ -1562,10 +1635,14 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             border: 3px solid;
         }}
 
-        .probability-circle.green {{ border-color: var(--color-green); background: rgba(40, 167, 69, 0.1); }}
-        .probability-circle.yellow {{ border-color: var(--color-yellow); background: rgba(255, 193, 7, 0.1); }}
-        .probability-circle.orange {{ border-color: var(--color-orange); background: rgba(253, 126, 20, 0.1); }}
-        .probability-circle.red {{ border-color: var(--color-red); background: rgba(220, 53, 69, 0.1); }}
+        .probability-circle.green {{ border-color: var(--color-green);
+            background: rgba(40, 167, 69, 0.1); }}
+        .probability-circle.yellow {{ border-color: var(--color-yellow);
+            background: rgba(255, 193, 7, 0.1); }}
+        .probability-circle.orange {{ border-color: var(--color-orange);
+            background: rgba(253, 126, 20, 0.1); }}
+        .probability-circle.red {{ border-color: var(--color-red);
+            background: rgba(220, 53, 69, 0.1); }}
 
         .prob-value {{
             font-size: 1.3em;
@@ -1731,6 +1808,11 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
             color: var(--text-secondary);
             margin-top: 30px;
         }}
+        /* Refine font family to avoid long lines */
+        .body-font {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                         Oxygen, Ubuntu, sans-serif;
+        }}
 
         /* Print styles */
         @media print {{
@@ -1807,7 +1889,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         }}
     </style>
 </head>
-<body>
+<body class="body-font">
     <div class="container">
         <header>
             <h1>🔍 {title}</h1>
@@ -1866,6 +1948,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
 
 def main():
+    """Main execution function for the AI Code Detector CLI."""
     parser = argparse.ArgumentParser(
         description='AI Code Detector - Analyze code to detect AI generation patterns (Enhanced Version)',
         formatter_class=argparse.RawDescriptionHelpFormatter,

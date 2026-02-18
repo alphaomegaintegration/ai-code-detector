@@ -6,12 +6,10 @@ This script demonstrates how to use the GitHub Repository Scanner
 programmatically to analyze repositories for AI-generated code.
 """
 
-import os
-import sys
 from pathlib import Path
 
 # Import the scanner
-from github_repo_scanner import GitHubRepoScanner, ReportGenerator, RepositoryAnalysis
+from github_repo_scanner import GitHubRepoScanner, ReportGenerator
 
 
 def example_scan_public_repository():
@@ -59,7 +57,7 @@ def example_scan_public_repository():
 
         return analysis
 
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"Error scanning repository: {e}")
         return None
 
@@ -107,7 +105,7 @@ def example_scan_local_directory():
 
         return analysis
 
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"Error scanning directory: {e}")
         return None
 
@@ -128,7 +126,7 @@ def example_custom_analysis():
     # Scan with custom extensions
     local_path = str(Path(__file__).parent)
 
-    print(f"Scanning Python files only, quiet mode...")
+    print("Scanning Python files only, quiet mode...")
     print("-" * 60)
 
     try:
@@ -138,27 +136,27 @@ def example_custom_analysis():
         )
 
         # Access analysis data programmatically
-        print(f"\n📊 Analysis Results:")
+        print("\n📊 Analysis Results:")
         print(f"   Total files: {analysis.files_analyzed}")
         print(f"   Average AI probability: {analysis.average_ai_probability}%")
         print(f"   High-risk files: {len(analysis.high_risk_files)}")
 
-        print(f"\n📈 Distribution:")
+        print("\n📈 Distribution:")
         for category, count in analysis.distribution.items():
             print(f"   {category}: {count} files")
 
-        print(f"\n💻 Languages found:")
+        print("\n💻 Languages found:")
         for lang, count in analysis.language_breakdown.items():
             print(f"   {lang}: {count} files")
 
         if analysis.high_risk_files:
-            print(f"\n⚠️  High-risk files requiring review:")
+            print("\n⚠️  High-risk files requiring review:")
             for f in analysis.high_risk_files[:5]:
                 print(f"   • {f['file']} ({f['ai_probability']}%)")
 
         return analysis
 
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"Error: {e}")
         return None
 
@@ -182,7 +180,7 @@ def main():
         try:
             result = func()
             results[name] = "Success" if result else "Failed"
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             results[name] = f"Error: {e}"
 
     # Summary

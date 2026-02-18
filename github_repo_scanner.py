@@ -6,6 +6,9 @@ This module provides comprehensive AI code detection across entire GitHub reposi
 It clones repositories, analyzes all code files, and generates detailed reports.
 """
 
+# pylint: disable=too-many-lines,too-many-instance-attributes,too-many-locals,too-many-statements
+# pylint: disable=broad-exception-caught
+
 import os
 import re
 import sys
@@ -136,7 +139,7 @@ class GitHubRepoScanner:
                 else:
                     raise RuntimeError(f"Git clone failed: {error_msg}")
 
-            self._log(f"Repository cloned successfully")
+            self._log("Repository cloned successfully")
             return self.temp_dir
 
         except subprocess.TimeoutExpired:
@@ -164,7 +167,8 @@ class GitHubRepoScanner:
                 ext_to_lang[ext] = lang
         return ext_to_lang
 
-    def _find_code_files(self, repo_path: str, extensions: Optional[List[str]] = None) -> List[Path]:
+    def _find_code_files(self, repo_path: str,
+                         extensions: Optional[List[str]] = None) -> List[Path]:
         """Find all code files in the repository"""
         if extensions is None:
             extensions = []
@@ -260,7 +264,8 @@ class GitHubRepoScanner:
 
         return dict(sorted(breakdown.items(), key=lambda x: x[1], reverse=True))
 
-    def _get_top_ai_files(self, results: List[DetectionResult], n: int = 10) -> List[Dict[str, Any]]:
+    def _get_top_ai_files(self, results: List[DetectionResult],
+                          n: int = 10) -> List[Dict[str, Any]]:
         """Get the top N files most likely to be AI-generated"""
         sorted_results = sorted(results, key=lambda x: x.ai_probability, reverse=True)
 
@@ -343,7 +348,9 @@ class GitHubRepoScanner:
 
             # Calculate statistics
             valid_results = [r for r in results if r.confidence != 'ERROR']
-            avg_probability = sum(r.ai_probability for r in valid_results) / len(valid_results) if valid_results else 0
+            total_prob = sum(r.ai_probability for r in valid_results)
+            avg_probability = (total_prob / len(valid_results)
+                               if valid_results else 0)
 
             # Calculate distribution
             distribution = self._calculate_distribution(valid_results)
@@ -401,7 +408,8 @@ class GitHubRepoScanner:
         finally:
             self._cleanup()
 
-    def scan_local_directory(self, path: str, extensions: Optional[List[str]] = None) -> RepositoryAnalysis:
+    def scan_local_directory(self, path: str,
+                             extensions: Optional[List[str]] = None) -> RepositoryAnalysis:
         """
         Scan a local directory for AI-generated code
 
@@ -444,7 +452,9 @@ class GitHubRepoScanner:
 
         # Calculate statistics (same as scan_repository)
         valid_results = [r for r in results if r.confidence != 'ERROR']
-        avg_probability = sum(r.ai_probability for r in valid_results) / len(valid_results) if valid_results else 0
+        total_prob = sum(r.ai_probability for r in valid_results)
+        avg_probability = (total_prob / len(valid_results)
+                           if valid_results else 0)
 
         distribution = self._calculate_distribution(valid_results)
         high_risk_files = self._find_high_risk_files(valid_results)
@@ -493,13 +503,19 @@ class ReportGenerator:
     @staticmethod
     def generate_json_report(analysis: RepositoryAnalysis, output_path: str):
         """Generate a JSON report"""
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(asdict(analysis), f, indent=2)
         print(f"JSON report saved to: {output_path}")
 
     @staticmethod
     def generate_html_report(analysis: RepositoryAnalysis, output_path: str):
-        """Generate a professional HTML report with visualizations"""
+        """
+        Generate a professional HTML report with visualizations.
+
+        Args:
+            analysis: RepositoryAnalysis object
+            output_path: Path to save the HTML report
+        """
 
         # Calculate percentages for distribution chart
         total = analysis.files_analyzed if analysis.files_analyzed > 0 else 1
@@ -571,7 +587,9 @@ class ReportGenerator:
 
         # Generate all files table
         all_files_html = ""
-        sorted_results = sorted(analysis.file_results, key=lambda x: x['ai_probability'], reverse=True)
+        sorted_results = sorted(analysis.file_results,
+                                key=lambda x: x['ai_probability'],
+                                reverse=True)
         for result in sorted_results:
             color = get_probability_color(result['ai_probability'])
             all_files_html += f"""
@@ -583,12 +601,13 @@ class ReportGenerator:
                 <td style="color: {color};">{result['verdict']}</td>
             </tr>"""
 
+        repo_name = analysis.repository_url.split('/')[-1].replace('.git', '')
         html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Detection Report - {analysis.repository_url.split('/')[-1].replace('.git', '')}</title>
+    <title>AI Code Detection Report - {repo_name}</title>
     <style>
         * {{
             box-sizing: border-box;
@@ -597,7 +616,8 @@ class ReportGenerator:
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                         Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #e0e0e0;
             min-height: 100vh;
@@ -857,9 +877,12 @@ class ReportGenerator:
         <header>
             <h1>🔍 AI Code Detection Report</h1>
             <div class="meta">
-                <span>📁 Repository: <strong>{analysis.repository_url}</strong></span>
+                <span>📁 Repository: <strong>{analysis.repository_url}</strong>
+                </span>
                 <span>🌿 Branch: <strong>{analysis.branch}</strong></span>
-                <span>📅 Analyzed: <strong>{analysis.analysis_timestamp[:19].replace('T', ' ')}</strong></span>
+                <span>📅 Analyzed: <strong>
+                    {analysis.analysis_timestamp[:19].replace('T', ' ')}
+                </strong></span>
             </div>
         </header>
 
@@ -870,11 +893,15 @@ class ReportGenerator:
             </div>
             <div class="stat-card">
                 <h3>Average AI Probability</h3>
-                <div class="stat-value {'red' if analysis.average_ai_probability >= 60 else 'orange' if analysis.average_ai_probability >= 40 else 'green'}">{analysis.average_ai_probability}%</div>
+                <div class="stat-value {'red' if analysis.average_ai_probability >= 60
+                                        else 'orange' if analysis.average_ai_probability >= 40
+                                        else 'green'}">{analysis.average_ai_probability}%</div>
             </div>
             <div class="stat-card">
                 <h3>High Risk Files</h3>
-                <div class="stat-value {'red' if len(analysis.high_risk_files) > 5 else 'orange' if len(analysis.high_risk_files) > 0 else 'green'}">{len(analysis.high_risk_files)}</div>
+                <div class="stat-value {'red' if len(analysis.high_risk_files) > 5
+                                        else 'orange' if len(analysis.high_risk_files) > 0
+                                        else 'green'}">{len(analysis.high_risk_files)}</div>
             </div>
             <div class="stat-card">
                 <h3>Languages Detected</h3>
@@ -885,16 +912,32 @@ class ReportGenerator:
         <section>
             <h2>📊 AI Probability Distribution</h2>
             <div class="distribution-chart">
-                <div class="dist-segment green" style="flex: {dist_percentages.get('likely_human (0-35%)', 0)}">{analysis.distribution.get('likely_human (0-35%)', 0)}</div>
-                <div class="dist-segment yellow" style="flex: {dist_percentages.get('mixed (35-55%)', 0)}">{analysis.distribution.get('mixed (35-55%)', 0)}</div>
-                <div class="dist-segment orange" style="flex: {dist_percentages.get('possibly_ai (55-75%)', 0)}">{analysis.distribution.get('possibly_ai (55-75%)', 0)}</div>
-                <div class="dist-segment red" style="flex: {dist_percentages.get('likely_ai (75-100%)', 0)}">{analysis.distribution.get('likely_ai (75-100%)', 0)}</div>
+                <div class="dist-segment green"
+                     style="flex: {dist_percentages.get('likely_human (0-35%)', 0)}">
+                    {analysis.distribution.get('likely_human (0-35%)', 0)}</div>
+                <div class="dist-segment yellow"
+                     style="flex: {dist_percentages.get('mixed (35-55%)', 0)}">
+                    {analysis.distribution.get('mixed (35-55%)', 0)}</div>
+                <div class="dist-segment orange"
+                     style="flex: {dist_percentages.get('possibly_ai (55-75%)', 0)}">
+                    {analysis.distribution.get('possibly_ai (55-75%)', 0)}</div>
+                <div class="dist-segment red"
+                     style="flex: {dist_percentages.get('likely_ai (75-100%)', 0)}">
+                    {analysis.distribution.get('likely_ai (75-100%)', 0)}</div>
             </div>
             <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background:#28a745"></div> Likely Human (0-35%): {analysis.distribution.get('likely_human (0-35%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#ffc107"></div> Mixed (35-55%): {analysis.distribution.get('mixed (35-55%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#fd7e14"></div> Possibly AI (55-75%): {analysis.distribution.get('possibly_ai (55-75%)', 0)} files</div>
-                <div class="legend-item"><div class="legend-color" style="background:#dc3545"></div> Likely AI (75-100%): {analysis.distribution.get('likely_ai (75-100%)', 0)} files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#28a745"></div> Likely Human:
+                    {analysis.distribution.get('likely_human (0-35%)', 0)} files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#ffc107"></div> Mixed:
+                    {analysis.distribution.get('mixed (35-55%)', 0)} files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#fd7e14"></div> Possibly AI:
+                    {analysis.distribution.get('possibly_ai (55-75%)', 0)} files</div>
+                <div class="legend-item"><div class="legend-color"
+                    style="background:#dc3545"></div> Likely AI:
+                    {analysis.distribution.get('likely_ai (75-100%)', 0)} files</div>
             </div>
         </section>
 
@@ -902,23 +945,28 @@ class ReportGenerator:
             <h2>📈 Verdict Summary</h2>
             <div class="verdict-summary">
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#dc3545">{analysis.summary.get('verdict_summary', {}).get('likely_ai', 0)}</div>
+                    <div class="verdict-count" style="color:#dc3545">
+                        {analysis.summary.get('verdict_summary', {}).get('likely_ai', 0)}</div>
                     <div class="verdict-label">Likely AI-Generated</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#fd7e14">{analysis.summary.get('verdict_summary', {}).get('possibly_ai', 0)}</div>
+                    <div class="verdict-count" style="color:#fd7e14">
+                        {analysis.summary.get('verdict_summary', {}).get('possibly_ai', 0)}</div>
                     <div class="verdict-label">Possibly AI-Assisted</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#ffc107">{analysis.summary.get('verdict_summary', {}).get('mixed', 0)}</div>
+                    <div class="verdict-count" style="color:#ffc107">
+                        {analysis.summary.get('verdict_summary', {}).get('mixed', 0)}</div>
                     <div class="verdict-label">Mixed Indicators</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#28a745">{analysis.summary.get('verdict_summary', {}).get('likely_human', 0)}</div>
+                    <div class="verdict-count" style="color:#28a745">
+                        {analysis.summary.get('verdict_summary', {}).get('likely_human', 0)}</div>
                     <div class="verdict-label">Likely Human-Written</div>
                 </div>
                 <div class="verdict-item">
-                    <div class="verdict-count" style="color:#6c757d">{analysis.summary.get('verdict_summary', {}).get('inconclusive', 0)}</div>
+                    <div class="verdict-count" style="color:#6c757d">
+                        {analysis.summary.get('verdict_summary', {}).get('inconclusive', 0)}</div>
                     <div class="verdict-label">Inconclusive</div>
                 </div>
             </div>
@@ -996,7 +1044,7 @@ class ReportGenerator:
 </body>
 </html>"""
 
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
         print(f"HTML report saved to: {output_path}")
 

@@ -3,7 +3,7 @@ Test file with AI-generated code characteristics.
 This module provides comprehensive functionality for user management.
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 
 
 def validate_user_input(user_input: str) -> bool:
