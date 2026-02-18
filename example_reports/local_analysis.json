@@ -1,10 +1,10 @@
 {
   "repository_url": "/app",
   "branch": "local",
-  "analysis_timestamp": "2026-02-18T13:35:22.982093",
+  "analysis_timestamp": "2026-02-18T14:53:28.821806",
   "total_files": 6,
   "files_analyzed": 6,
-  "average_ai_probability": 23.82,
+  "average_ai_probability": 23.99,
   "distribution": {
     "likely_human (0-35%)": 5,
     "mixed (35-55%)": 1,
@@ -46,9 +46,9 @@
     },
     {
       "file": "github_repo_scanner.py",
-      "ai_probability": 17.53,
-      "human_probability": 82.47,
-      "confidence": "MEDIUM",
+      "ai_probability": 18.57,
+      "human_probability": 81.43,
+      "confidence": "MEDIUM-HIGH",
       "verdict": "LIKELY HUMAN-WRITTEN"
     },
     {
@@ -289,16 +289,16 @@
     },
     {
       "file_path": "github_repo_scanner.py",
-      "ai_probability": 17.53,
-      "human_probability": 82.47,
-      "confidence": "MEDIUM",
+      "ai_probability": 18.57,
+      "human_probability": 81.43,
+      "confidence": "MEDIUM-HIGH",
       "indicators": {
         "perfect_formatting": true,
         "modern_syntax_heavy": true,
         "unnaturally_perfect_consistency": true,
         "obvious_comment_examples": [
           "[Line 26] Import statement: # Import the existing detector",
-          "[Line 319] Get operation: # Get actual branch name"
+          "[Line 321] Get operation: # Get actual branch name"
         ],
         "defensive_pattern_examples": [
           "Many try blocks: 6",
@@ -311,7 +311,8 @@
         ],
         "missing_human_quirks": [
           "No TODO/FIXME/HACK/NOTE/XXX comments",
-          "No commented-out code"
+          "No commented-out code",
+          "No magic numbers with inline comments"
         ]
       },
       "detailed_scores": {
@@ -324,26 +325,26 @@
         },
         "comment_analysis": {
           "ai_indicators": 0.3,
-          "comment_ratio": 0.044,
+          "comment_ratio": 0.043,
           "formal_comments": 29,
           "informal_comments": 0,
           "avg_comment_length": 36.16
         },
         "structure_analysis": {
           "ai_indicators": 0.4,
-          "indent_consistency": 0.98,
-          "blank_line_ratio": 0.163
+          "indent_consistency": 0.975,
+          "blank_line_ratio": 0.161
         },
         "complexity_analysis": {
           "ai_indicators": 0.0,
-          "avg_line_length": 30.04,
-          "control_structures": 111,
-          "nesting_indicators": 60
+          "avg_line_length": 29.77,
+          "control_structures": 117,
+          "nesting_indicators": 74
         },
         "error_handling": {
           "ai_indicators": 0.2,
           "try_blocks": 6,
-          "except_blocks": 7,
+          "except_blocks": 8,
           "null_checks": 0,
           "error_handling_ratio": 0.013
         },
@@ -353,11 +354,11 @@
           "function_count": 21,
           "class_count": 3,
           "documented_ratio": 1.208,
-          "avg_docstring_length": 643.79
+          "avg_docstring_length": 647.45
         },
         "formatting_consistency": {
           "ai_indicators": 0.0,
-          "spacing_consistency": 0.16
+          "spacing_consistency": 0.158
         },
         "modern_syntax": {
           "ai_indicators": 0.9523809523809523,
@@ -380,7 +381,7 @@
           "try_blocks": 6,
           "assertions": 0,
           "repeated_conditions": 2,
-          "defensive_ratio": 0.016
+          "defensive_ratio": 0.015
         },
         "textbook_algorithms": {
           "ai_indicators": 0.0,
@@ -395,19 +396,19 @@
           "small_function_ratio": 0.143,
           "helper_function_count": 4,
           "helper_ratio": 0.19,
-          "avg_function_size": 41.5
+          "avg_function_size": 42.2
         },
         "perfect_consistency": {
           "ai_indicators": 0.4,
           "naming_consistency": 1.0,
-          "spacing_consistency": 0.302,
+          "spacing_consistency": 0.293,
           "comment_style_consistency": 1.0,
           "indent_consistency": 0.871,
           "perfect_consistency_count": 2
         },
         "contextual_quirks": {
-          "ai_indicators": 0.0,
-          "missing_quirk_count": 2,
+          "ai_indicators": 0.15,
+          "missing_quirk_count": 3,
           "total_quirk_checks": 6,
           "has_todo_fixme": false,
           "has_temp_vars": true,
@@ -416,8 +417,8 @@
         },
         "formatting_perfection": {
           "ai_indicators": 0.0,
-          "indent_perfection": 0.98,
-          "line_length_consistency": 0.545,
+          "indent_perfection": 0.975,
+          "line_length_consistency": 0.563,
           "no_trailing_whitespace": true,
           "blank_line_regularity": 0.0,
           "perfection_count": 1
@@ -448,11 +449,12 @@
         ],
         "missing_quirks": [
           "No TODO/FIXME/HACK/NOTE/XXX comments",
-          "No commented-out code"
+          "No commented-out code",
+          "No magic numbers with inline comments"
         ],
         "obvious_comment_examples": [
           "[Line 26] Import statement: # Import the existing detector",
-          "[Line 319] Get operation: # Get actual branch name"
+          "[Line 321] Get operation: # Get actual branch name"
         ]
       }
     },
@@ -510,7 +512,7 @@
         },
         "complexity_analysis": {
           "ai_indicators": 0.2,
-          "avg_line_length": 31.45,
+          "avg_line_length": 32.53,
           "control_structures": 13,
           "nesting_indicators": 2
         },
@@ -531,7 +533,7 @@
         },
         "formatting_consistency": {
           "ai_indicators": 0.0,
-          "spacing_consistency": 0.466
+          "spacing_consistency": 0.422
         },
         "modern_syntax": {
           "ai_indicators": 1.0,
@@ -574,7 +576,7 @@
         "perfect_consistency": {
           "ai_indicators": 0.4,
           "naming_consistency": 1.0,
-          "spacing_consistency": 0.635,
+          "spacing_consistency": 0.557,
           "comment_style_consistency": 1.0,
           "indent_consistency": 0.932,
           "perfect_consistency_count": 2
@@ -591,7 +593,7 @@
         "formatting_perfection": {
           "ai_indicators": 0.4,
           "indent_perfection": 1.0,
-          "line_length_consistency": 0.611,
+          "line_length_consistency": 0.559,
           "no_trailing_whitespace": true,
           "blank_line_regularity": 1.0,
           "perfection_count": 3
@@ -666,21 +668,21 @@
         },
         "comment_analysis": {
           "ai_indicators": 0.3,
-          "comment_ratio": 0.039,
+          "comment_ratio": 0.038,
           "formal_comments": 18,
           "informal_comments": 0,
-          "avg_comment_length": 45.75
+          "avg_comment_length": 45.41
         },
         "structure_analysis": {
           "ai_indicators": 0.4,
-          "indent_consistency": 0.974,
-          "blank_line_ratio": 0.18
+          "indent_consistency": 0.971,
+          "blank_line_ratio": 0.177
         },
         "complexity_analysis": {
           "ai_indicators": 0.0,
-          "avg_line_length": 33.41,
-          "control_structures": 310,
-          "nesting_indicators": 255
+          "avg_line_length": 33.07,
+          "control_structures": 318,
+          "nesting_indicators": 281
         },
         "error_handling": {
           "ai_indicators": 0.2,
@@ -695,11 +697,11 @@
           "function_count": 27,
           "class_count": 3,
           "documented_ratio": 0.6,
-          "avg_docstring_length": 2579.33
+          "avg_docstring_length": 2574.72
         },
         "formatting_consistency": {
           "ai_indicators": 0.0,
-          "spacing_consistency": 0.214
+          "spacing_consistency": 0.213
         },
         "modern_syntax": {
           "ai_indicators": 0.9818181818181818,
@@ -711,7 +713,7 @@
           "ai_indicators": 0.0,
           "ai_phrase_count": 0,
           "obvious_comment_count": 0,
-          "total_comments": 67,
+          "total_comments": 66,
           "ai_phrase_ratio": 0.0,
           "obvious_ratio": 0.0
         },
@@ -737,12 +739,12 @@
           "small_function_ratio": 0.0,
           "helper_function_count": 0,
           "helper_ratio": 0.0,
-          "avg_function_size": 61.4
+          "avg_function_size": 61.7
         },
         "perfect_consistency": {
           "ai_indicators": 0.4,
           "naming_consistency": 0.989,
-          "spacing_consistency": 0.422,
+          "spacing_consistency": 0.419,
           "comment_style_consistency": 0.985,
           "indent_consistency": 0.919,
           "perfect_consistency_count": 2
@@ -758,8 +760,8 @@
         },
         "formatting_perfection": {
           "ai_indicators": 0.0,
-          "indent_perfection": 0.974,
-          "line_length_consistency": 0.563,
+          "indent_perfection": 0.971,
+          "line_length_consistency": 0.572,
           "no_trailing_whitespace": true,
           "blank_line_regularity": 0.0,
           "perfection_count": 1
@@ -767,7 +769,7 @@
         "obvious_comments": {
           "ai_indicators": 0.0,
           "obvious_comment_count": 0,
-          "total_comments": 67,
+          "total_comments": 66,
           "obvious_ratio": 0.0
         }
       },
@@ -1111,7 +1113,7 @@
     "total_files_in_repo": 6,
     "files_successfully_analyzed": 6,
     "files_with_errors": 0,
-    "average_ai_probability": 23.82,
+    "average_ai_probability": 23.99,
     "median_ai_probability": 22.43,
     "high_risk_count": 0,
     "verdict_summary": {

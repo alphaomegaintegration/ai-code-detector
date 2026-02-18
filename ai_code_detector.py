@@ -534,7 +534,6 @@ class AICodeDetector:
             ai_score += 0.4
         elif ai_phrase_ratio > 0.15:
             ai_score += 0.2
-
         if obvious_ratio > 0.2:
             ai_score += 0.4
         elif obvious_ratio > 0.1:
@@ -575,7 +574,6 @@ class AICodeDetector:
 
         # Over-use of try-catch
         try_blocks = len(re.findall(r'\btry\s*:', code))
-        simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code))
         if try_blocks > 3:
             patterns_found.append(f"Many try blocks: {try_blocks}")
 
@@ -667,7 +665,6 @@ class AICodeDetector:
             ai_score += 0.4
         elif textbook_count > 1:
             ai_score += 0.2
-
         if verbose_indicators > 2:
             ai_score += 0.3
         elif verbose_indicators > 0:
@@ -728,19 +725,20 @@ class AICodeDetector:
         small_func_ratio = small_func_count / max(total_functions, 1)
 
         # Check for helper function naming patterns
-        helper_patterns = ['_helper', '_util', '_process', '_handle', '_validate', '_check', '_get', '_set', '_create']
-        helper_count = sum(1 for m in func_matches if any(p in m.group(1).lower() for p in helper_patterns))
+        helper_patterns = [
+            '_helper', '_util', '_process', '_handle', '_validate',
+            '_check', '_get', '_set', '_create'
+        ]
+        helper_count = sum(1 for m in func_matches
+                           if any(p in m.group(1).lower()
+                                  for p in helper_patterns))
         helper_ratio = helper_count / max(total_functions, 1)
-
-        # Check for similar function patterns (repetitive structure)
-        func_signatures = [m.group(0) for m in func_matches]
 
         ai_score = 0.0
         if small_func_ratio > 0.5 and total_functions > 3:
             ai_score += 0.4
         elif small_func_ratio > 0.3 and total_functions > 2:
             ai_score += 0.2
-
         if helper_ratio > 0.4:
             ai_score += 0.3
         elif helper_ratio > 0.2:
@@ -763,7 +761,6 @@ class AICodeDetector:
 
     def _analyze_enhanced_consistency(self, code: str) -> Dict[str, Any]:
         """Detect perfect consistency that's unnatural for humans."""
-        lines = [l for l in code.split('\n') if l.strip()]
 
         # Check naming consistency
         snake_case = len(re.findall(r'\b[a-z]+_[a-z]+\b', code))
@@ -814,7 +811,8 @@ class AICodeDetector:
             ai_score += 0.2
 
         # Also add partial score for high consistency
-        avg_consistency = (naming_consistency + spacing_consistency + comment_style_consistency + indent_consistency) / 4
+        avg_consistency = (naming_consistency + spacing_consistency +
+                           comment_style_consistency + indent_consistency) / 4
         if avg_consistency > 0.9:
             ai_score += 0.2
 
@@ -1051,9 +1049,9 @@ class AICodeDetector:
 
         if variance < 0.04 and agreement > 0.6:
             return "HIGH"
-        elif variance < 0.08 and agreement > 0.5:
+        if variance < 0.08 and agreement > 0.5:
             return "MEDIUM-HIGH"
-        elif variance < 0.15:
+        if variance < 0.15:
             return "MEDIUM"
         else:
             return "LOW"
@@ -1080,16 +1078,17 @@ class AICodeDetector:
         # Enhanced verdict logic
         if ai_score > 0.70 or (ai_score > 0.55 and strong_ai_indicators >= 4):
             return "HIGHLY LIKELY AI-GENERATED"
-        elif ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
+        if ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
             return "LIKELY AI-GENERATED"
-        elif ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
+        if ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
             return "POSSIBLY AI-ASSISTED"
-        elif ai_score > 0.30:
+        if ai_score > 0.30:
             return "MIXED INDICATORS"
         else:
             return "LIKELY HUMAN-WRITTEN"
 
-    def _extract_key_indicators(self, scores: Dict[str, Dict], detected_patterns: Dict[str, List]) -> Dict[str, Any]:
+    def _extract_key_indicators(self, scores: Dict[str, Dict],
+                                detected_patterns: Dict[str, List]) -> Dict[str, Any]:
         indicators = {}
 
         # Original indicators
@@ -1146,7 +1145,9 @@ class AICodeDetector:
 
         # Add examples of detected patterns
         if detected_patterns.get('obvious_comment_examples'):
-            indicators['obvious_comment_examples'] = detected_patterns['obvious_comment_examples'][:5]
+            indicators['obvious_comment_examples'] = (
+                detected_patterns['obvious_comment_examples'][:5]
+            )
 
         if detected_patterns.get('ai_phrases'):
             indicators['ai_phrase_examples'] = detected_patterns['ai_phrases'][:5]
@@ -1166,7 +1167,8 @@ class AICodeDetector:
         return indicators
 
 
-def generate_html_report(results: List[DetectionResult], output_path: str, title: str = "AI Code Detection Report"):
+def generate_html_report(results: List[DetectionResult], output_path: str,
+                         title: str = "AI Code Detection Report"):
     """
     Generate a professional HTML report with all analysis results.
 
@@ -1191,9 +1193,9 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
     def get_probability_color(prob):
         if prob >= 75:
             return '#dc3545'  # Red
-        elif prob >= 55:
+        if prob >= 55:
             return '#fd7e14'  # Orange
-        elif prob >= 35:
+        if prob >= 35:
             return '#ffc107'  # Yellow
         else:
             return '#28a745'  # Green
@@ -1201,9 +1203,9 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
     def get_probability_class(prob):
         if prob >= 75:
             return 'red'
-        elif prob >= 55:
+        if prob >= 55:
             return 'orange'
-        elif prob >= 35:
+        if prob >= 35:
             return 'yellow'
         else:
             return 'green'
@@ -1211,9 +1213,9 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
     def get_probability_label(prob):
         if prob >= 75:
             return 'Likely AI-Generated'
-        elif prob >= 55:
+        if prob >= 55:
             return 'Possibly AI-Assisted'
-        elif prob >= 35:
+        if prob >= 35:
             return 'Mixed Indicators'
         else:
             return 'Likely Human'
@@ -1224,9 +1226,7 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
                             key=lambda x: x.ai_probability, reverse=True)
 
     for idx, result in enumerate(sorted_results):
-        color = get_probability_color(result.ai_probability)
         color_class = get_probability_class(result.ai_probability)
-        prob_label = get_probability_label(result.ai_probability)
 
         # Generate dimension scores HTML
         dimension_html = ""
@@ -1894,7 +1894,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
         <header>
             <h1>🔍 {title}</h1>
             <div class="meta">
-                <span>📅 Generated: <strong>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</strong></span>
+                <span>📅 Generated: <strong>
+                    {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</strong></span>
                 <span>📁 Files: <strong>{total_files}</strong></span>
                 <span>📊 Dimensions: <strong>16</strong></span>
             </div>
@@ -1904,7 +1905,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 
         <section class="files-section">
             <h2 style="color: #fff; margin-bottom: 20px;">📄 File Analysis Results</h2>
-            {file_cards_html if file_cards_html else '<p style="color: var(--text-secondary);">No files were analyzed.</p>'}
+            {file_cards_html if file_cards_html
+             else '<p style="color: var(--text-secondary);">No files.</p>'}
         </section>
 
         <footer>
@@ -1950,7 +1952,8 @@ def generate_html_report(results: List[DetectionResult], output_path: str, title
 def main():
     """Main execution function for the AI Code Detector CLI."""
     parser = argparse.ArgumentParser(
-        description='AI Code Detector - Analyze code to detect AI generation patterns (Enhanced Version)',
+        description=('AI Code Detector - Analyze code to detect AI '
+                     'generation patterns (Enhanced Version)'),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -2105,7 +2108,7 @@ Examples:
         # Generate a title based on input
         if args.directory:
             title = f"AI Code Detection Report - {Path(args.directory).name}"
-        elif len(files_to_analyze) == 1:
+        if len(files_to_analyze) == 1:
             title = f"AI Code Detection Report - {files_to_analyze[0].name}"
         else:
             title = "AI Code Detection Report"

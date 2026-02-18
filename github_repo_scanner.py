@@ -127,14 +127,15 @@ class GitHubRepoScanner:
                 clone_cmd,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
+                check=False
             )
 
             if result.returncode != 0:
                 error_msg = result.stderr.strip()
                 if 'not found' in error_msg.lower():
                     raise ValueError(f"Repository not found: {url}")
-                elif 'could not find remote branch' in error_msg.lower():
+                if 'could not find remote branch' in error_msg.lower():
                     raise ValueError(f"Branch not found: {branch}")
                 else:
                     raise RuntimeError(f"Git clone failed: {error_msg}")
@@ -142,9 +143,9 @@ class GitHubRepoScanner:
             self._log("Repository cloned successfully")
             return self.temp_dir
 
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as exc:
             self._cleanup()
-            raise RuntimeError("Clone operation timed out (>5 minutes)")
+            raise RuntimeError("Clone operation timed out (>5 mins)") from exc
 
     def _get_default_branch(self, repo_path: str) -> str:
         """Get the default branch name from the cloned repository"""
@@ -153,10 +154,11 @@ class GitHubRepoScanner:
                 ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                 capture_output=True,
                 text=True,
-                cwd=repo_path
+                cwd=repo_path,
+                check=False
             )
             return result.stdout.strip() if result.returncode == 0 else 'main'
-        except:
+        except Exception: # pylint: disable=broad-exception-caught
             return 'main'
 
     def _get_extension_to_language(self) -> Dict[str, str]:
@@ -208,7 +210,7 @@ class GitHubRepoScanner:
                 rel_path = str(file_path.relative_to(repo_path))
                 result.file_path = rel_path
                 results.append(result)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 self._log(f"Error analyzing {file_path}: {e}", "ERROR")
 
         return results
@@ -287,7 +289,7 @@ class GitHubRepoScanner:
             self._log(f"Cleaning up temporary directory: {self.temp_dir}")
             try:
                 shutil.rmtree(self.temp_dir)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 self._log(f"Warning: Could not clean up temp dir: {e}", "WARN")
             finally:
                 self.temp_dir = None
@@ -525,11 +527,11 @@ class ReportGenerator:
         def get_verdict_color(verdict):
             if 'LIKELY AI' in verdict:
                 return '#dc3545'  # Red
-            elif 'POSSIBLY AI' in verdict:
+            if 'POSSIBLY AI' in verdict:
                 return '#fd7e14'  # Orange
-            elif 'MIXED' in verdict:
+            if 'MIXED' in verdict:
                 return '#ffc107'  # Yellow
-            elif 'HUMAN' in verdict:
+            if 'HUMAN' in verdict:
                 return '#28a745'  # Green
             else:
                 return '#6c757d'  # Gray
@@ -537,9 +539,9 @@ class ReportGenerator:
         def get_probability_color(prob):
             if prob >= 75:
                 return '#dc3545'  # Red
-            elif prob >= 55:
+            if prob >= 55:
                 return '#fd7e14'  # Orange
-            elif prob >= 35:
+            if prob >= 35:
                 return '#ffc107'  # Yellow
             else:
                 return '#28a745'  # Green
@@ -569,11 +571,15 @@ class ReportGenerator:
                     <td style="color: #dc3545;">{file['verdict']}</td>
                 </tr>"""
         else:
-            high_risk_html = '<tr><td colspan="4" style="text-align: center; color: #28a745;">No high-risk files detected!</td></tr>'
+            high_risk_html = (
+                '<tr><td colspan="4" style="text-align: center; '
+                'color: #28a745;">No high-risk files detected!</td></tr>'
+            )
 
         # Generate language breakdown HTML
         lang_html = ""
-        max_files = max(analysis.language_breakdown.values()) if analysis.language_breakdown else 1
+        max_files = (max(analysis.language_breakdown.values())
+                     if analysis.language_breakdown else 1)
         for lang, count in analysis.language_breakdown.items():
             width = (count / max_files) * 100
             lang_html += f"""
@@ -991,7 +997,9 @@ class ReportGenerator:
                         </tr>
                     </thead>
                     <tbody>
-                        {top_files_html if top_files_html else '<tr><td colspan="5" style="text-align:center">No files analyzed</td></tr>'}
+                        {top_files_html if top_files_html else
+                         '<tr><td colspan="5" style="text-align:center">'
+                         'No files analyzed</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -1030,7 +1038,9 @@ class ReportGenerator:
                         </tr>
                     </thead>
                     <tbody>
-                        {all_files_html if all_files_html else '<tr><td colspan="5" style="text-align:center">No files analyzed</td></tr>'}
+                        {all_files_html if all_files_html else
+                         '<tr><td colspan="5" style="text-align:center">'
+                         'No files analyzed</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -1128,16 +1138,20 @@ Examples:
     parser.add_argument('-o', '--output-dir', default='.',
                        help='Output directory for reports (default: current directory)')
     parser.add_argument('--local', metavar='PATH', help='Scan a local directory instead of GitHub')
-    parser.add_argument('--extensions', help='Comma-separated list of file extensions to analyze (e.g., .py,.js)')
-    parser.add_argument('--json-only', action='store_true', help='Generate only JSON report')
-    parser.add_argument('--html-only', action='store_true', help='Generate only HTML report')
-    parser.add_argument('-q', '--quiet', action='store_true', help='Suppress progress output')
+    parser.add_argument('--extensions',
+                        help='File extensions (e.g., .py,.js)')
+    parser.add_argument('--json-only', action='store_true',
+                        help='Generate only JSON report')
+    parser.add_argument('--html-only', action='store_true',
+                        help='Generate only HTML report')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Suppress progress output')
 
     args = parser.parse_args()
 
     # Validate arguments
     if not args.url and not args.local:
-        parser.error("Please provide either a GitHub URL or use --local for local directory scanning")
+        parser.error("Provide a GitHub URL or --local for local directory")
 
     # Parse extensions
     extensions = None
@@ -1187,7 +1201,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n⚠️  Analysis interrupted by user")
         sys.exit(130)
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"\n❌ Unexpected error: {e}")
         sys.exit(1)
 

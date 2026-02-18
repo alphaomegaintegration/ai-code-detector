@@ -57,7 +57,7 @@ def example_scan_public_repository():
 
         return analysis
 
-    except Exception as e: # pylint: disable=broad-exception-caught
+    except Exception as e: # pylint: disable=broad-exception-caught # pylint: disable=broad-exception-caught
         print(f"Error scanning repository: {e}")
         return None
 
@@ -105,7 +105,7 @@ def example_scan_local_directory():
 
         return analysis
 
-    except Exception as e: # pylint: disable=broad-exception-caught
+    except Exception as e: # pylint: disable=broad-exception-caught # pylint: disable=broad-exception-caught
         print(f"Error scanning directory: {e}")
         return None
 
@@ -156,7 +156,7 @@ def example_custom_analysis():
 
         return analysis
 
-    except Exception as e: # pylint: disable=broad-exception-caught
+    except Exception as e: # pylint: disable=broad-exception-caught # pylint: disable=broad-exception-caught
         print(f"Error: {e}")
         return None
 
@@ -180,7 +180,7 @@ def main():
         try:
             result = func()
             results[name] = "Success" if result else "Failed"
-        except Exception as e: # pylint: disable=broad-exception-caught
+        except Exception as e: # pylint: disable=broad-exception-caught # pylint: disable=broad-exception-caught
             results[name] = f"Error: {e}"
 
     # Summary
