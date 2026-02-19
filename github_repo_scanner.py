@@ -174,11 +174,20 @@ class GitHubRepoScanner:
                 extensions.extend(exts)
 
         code_files = []
-        repo = Path(repo_path)
+        repo = Path(repo_path).resolve()
 
         for file_path in repo.rglob('*'):
             # Skip directories in SKIP_DIRECTORIES
             if any(skip_dir in file_path.parts for skip_dir in self.SKIP_DIRECTORIES):
+                continue
+
+            # Security check: Ensure file resolves to within the repository
+            # This prevents symlink traversal attacks
+            try:
+                # Check if the resolved path is relative to the repo root
+                file_path.resolve().relative_to(repo)
+            except (ValueError, RuntimeError):
+                self._log(f"Skipping file outside repository boundary: {file_path}", "WARN")
                 continue
 
             # Only include files with matching extensions
