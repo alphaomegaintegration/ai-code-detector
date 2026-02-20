@@ -244,7 +244,7 @@ class AICodeDetector:
             human_probability=round(human_score * 100, 2),
             confidence=confidence,
             indicators=indicators,
-            detailed_scores=scores,
+            detailed_scores={k: v for k, v in scores.items()},
             verdict=verdict,
             detected_patterns=detected_patterns
         )
@@ -434,8 +434,12 @@ class AICodeDetector:
         }
 
     def _analyze_formatting(self, code: str) -> Dict[str, Any]:
-        # Unused logic for spacing_patterns removed
-        # lines = [l for l in code.split('\n') if l.strip()]
+        lines = [l for l in code.split('\n') if l.strip()]
+
+        spacing_patterns = []
+        for line in lines:
+            if '=' in line and 'def' not in line and 'class' not in line:
+                spacing_patterns.append('=' in line.replace('==', '').replace('!=', ''))
 
         operator_spacing = len(re.findall(r'\s[+\-*/=]\s', code))
         total_operators = len(re.findall(r'[+\-*/=]', code))
@@ -554,7 +558,7 @@ class AICodeDetector:
 
         # Over-use of try-catch
         try_blocks = len(re.findall(r'\btry\s*:', code))
-        # simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code)) # Unused
+        simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code))
         if try_blocks > 3:
             patterns_found.append(f"Many try blocks: {try_blocks}")
 
@@ -688,14 +692,7 @@ class AICodeDetector:
 
             func_body_lines = lines[start_line:end_line]
             # Count non-empty, non-comment lines (excluding the def line itself)
-            # func_lines = [l for l in func_body_lines[1:] if l.strip() and not l.strip().startswith('#') and not l.strip().startswith('"""') and not l.strip().startswith("'''")]
-            # Simplified loop to avoid line too long
-            func_lines = []
-            for line in func_body_lines[1:]:
-                stripped = line.strip()
-                if stripped and not stripped.startswith('#') and not stripped.startswith('"""') and not stripped.startswith("'''"):
-                    func_lines.append(line)
-
+            func_lines = [l for l in func_body_lines[1:] if l.strip() and not l.strip().startswith('#') and not l.strip().startswith('"""') and not l.strip().startswith("'''")]
             func_size = len(func_lines)
             function_sizes.append(func_size)
 
@@ -712,7 +709,7 @@ class AICodeDetector:
         helper_ratio = helper_count / max(total_functions, 1)
 
         # Check for similar function patterns (repetitive structure)
-        # func_signatures = [m.group(0) for m in func_matches] # Unused
+        func_signatures = [m.group(0) for m in func_matches]
 
         ai_score = 0.0
         if small_func_ratio > 0.5 and total_functions > 3:
@@ -742,7 +739,7 @@ class AICodeDetector:
 
     def _analyze_enhanced_consistency(self, code: str) -> Dict[str, Any]:
         """Detect perfect consistency that's unnatural for humans."""
-        # lines = [l for l in code.split('\n') if l.strip()]
+        lines = [l for l in code.split('\n') if l.strip()]
 
         # Check naming consistency
         snake_case = len(re.findall(r'\b[a-z]+_[a-z]+\b', code))
@@ -988,11 +985,12 @@ class AICodeDetector:
 
         if variance < 0.04 and agreement > 0.6:
             return "HIGH"
-        if variance < 0.08 and agreement > 0.5:
+        elif variance < 0.08 and agreement > 0.5:
             return "MEDIUM-HIGH"
-        if variance < 0.15:
+        elif variance < 0.15:
             return "MEDIUM"
-        return "LOW"
+        else:
+            return "LOW"
 
     def _determine_verdict(self, ai_score: float, confidence: str, scores: Dict[str, Dict]) -> str:
         # Count strong AI indicators
@@ -1016,13 +1014,14 @@ class AICodeDetector:
         # Enhanced verdict logic
         if ai_score > 0.70 or (ai_score > 0.55 and strong_ai_indicators >= 4):
             return "HIGHLY LIKELY AI-GENERATED"
-        if ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
+        elif ai_score > 0.55 or (ai_score > 0.45 and strong_ai_indicators >= 3):
             return "LIKELY AI-GENERATED"
-        if ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
+        elif ai_score > 0.45 or (ai_score > 0.35 and strong_ai_indicators >= 2):
             return "POSSIBLY AI-ASSISTED"
-        if ai_score > 0.30:
+        elif ai_score > 0.30:
             return "MIXED INDICATORS"
-        return "LIKELY HUMAN-WRITTEN"
+        else:
+            return "LIKELY HUMAN-WRITTEN"
 
     def _extract_key_indicators(self, scores: Dict[str, Dict], detected_patterns: Dict[str, List]) -> Dict[str, Any]:
         indicators = {}
@@ -1103,7 +1102,7 @@ class AICodeDetector:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='AI Code Detector - Analyze code to detect AI generation patterns (Enhanced Version)', # pylint: disable=line-too-long
+        description='AI Code Detector - Analyze code to detect AI generation patterns (Enhanced Version)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
