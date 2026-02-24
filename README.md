@@ -37,13 +37,22 @@ AI Code Detector is a sophisticated analysis tool that distinguishes between hum
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- **Python**: 3.7 or higher
+- **Git**: Required for repository scanning and updates
+
 ### Installation
 
 ```bash
-# Clone or download the tool
-cd /home/ubuntu/ai_code_detector
+# Clone the repository
+git clone https://github.com/alphaomegaintegration/ai-code-detector
+cd ai-code-detector
 
-# Make executable (optional)
+# Update to latest version
+git pull
+
+# Make executable (optional - allows running without 'python' command)
 chmod +x ai_code_detector.py
 chmod +x github_repo_scanner.py
 ```
