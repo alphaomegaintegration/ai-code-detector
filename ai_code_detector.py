@@ -120,6 +120,20 @@ class AICodeDetector:
             (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]', 'Adjacent element comparison (bubble sort)'),
         ]
 
+        # Defensive coding patterns (pre-compiled for performance)
+        self.defensive_patterns = {
+            'none_checks': re.compile(r'if\s+\w+\s+is\s+not\s+None'),
+            'null_checks': re.compile(r'if\s+\w+\s*!=\s*null', re.IGNORECASE),
+            'type_checks': re.compile(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)'),
+            'try_blocks': re.compile(r'\btry\s*:'),
+            'simple_operations': re.compile(r'try\s*:\s*\n\s*\w+\s*='),
+            'assertions': re.compile(r'assert\s+.+'),
+            'if_conditions': re.compile(r'if\s+(.+?):'),
+            'validation_not': re.compile(r'if\s+not\s+\w+\s*:'),
+            'validation_none': re.compile(r'if\s+\w+\s+is\s+None\s*:'),
+            'validation_raise': re.compile(r'raise\s+(ValueError|TypeError|RuntimeError)')
+        }
+
     def analyze_file(self, file_path: str) -> DetectionResult:
         """Analyze a single file for AI code patterns."""
         try:
@@ -544,41 +558,41 @@ class AICodeDetector:
         patterns_found = []
 
         # Excessive null/None checks
-        none_checks = re.findall(r'if\s+\w+\s+is\s+not\s+None', code)
-        null_checks = re.findall(r'if\s+\w+\s*!=\s*null', code, re.IGNORECASE)
+        none_checks = self.defensive_patterns['none_checks'].findall(code)
+        null_checks = self.defensive_patterns['null_checks'].findall(code)
         none_check_count = len(none_checks) + len(null_checks)
         if none_check_count > 0:
             patterns_found.extend([f"None check: {c[:50]}" for c in none_checks[:3]])
 
         # Redundant type checking
-        type_checks = re.findall(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)', code)
+        type_checks = self.defensive_patterns['type_checks'].findall(code)
         type_check_count = len(type_checks)
         if type_check_count > 3:
             patterns_found.append(f"Excessive type checks: {type_check_count} isinstance calls")
 
         # Over-use of try-catch
-        try_blocks = len(re.findall(r'\btry\s*:', code))
-        simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code))
+        try_blocks = len(self.defensive_patterns['try_blocks'].findall(code))
+        simple_operations = len(self.defensive_patterns['simple_operations'].findall(code))
         if try_blocks > 3:
             patterns_found.append(f"Many try blocks: {try_blocks}")
 
         # Redundant assertions
-        assertions = re.findall(r'assert\s+.+', code)
+        assertions = self.defensive_patterns['assertions'].findall(code)
         assert_count = len(assertions)
         if assert_count > 2:
             patterns_found.append(f"Multiple assertions: {assert_count}")
 
         # Multiple validation of same condition
-        if_conditions = re.findall(r'if\s+(.+?):', code)
+        if_conditions = self.defensive_patterns['if_conditions'].findall(code)
         condition_counter = Counter(if_conditions)
         repeated_conditions = sum(1 for c, count in condition_counter.items() if count > 1)
         if repeated_conditions > 0:
             patterns_found.append(f"Repeated conditions: {repeated_conditions}")
 
         # Input validation patterns
-        validation_patterns = len(re.findall(r'if\s+not\s+\w+\s*:', code))
-        validation_patterns += len(re.findall(r'if\s+\w+\s+is\s+None\s*:', code))
-        validation_patterns += len(re.findall(r'raise\s+(ValueError|TypeError|RuntimeError)', code))
+        validation_patterns = len(self.defensive_patterns['validation_not'].findall(code))
+        validation_patterns += len(self.defensive_patterns['validation_none'].findall(code))
+        validation_patterns += len(self.defensive_patterns['validation_raise'].findall(code))
 
         lines = [l for l in code.split('\n') if l.strip()]
         defensive_ratio = (none_check_count + type_check_count + try_blocks + validation_patterns) / max(len(lines), 1)
