@@ -612,16 +612,6 @@ class ReportGenerator:
         return 'green'
 
     @staticmethod
-    def get_probability_label(prob): # pylint: disable=missing-function-docstring
-        if prob >= 75:
-            return 'Likely AI-Generated'
-        if prob >= 55:
-            return 'Possibly AI-Assisted'
-        if prob >= 35:
-            return 'Mixed Indicators'
-        return 'Likely Human'
-
-    @staticmethod
     def generate_json_report(data: Any, output_path: str):
         """Generate a JSON report"""
         with open(output_path, 'w', encoding='utf-8') as f:
