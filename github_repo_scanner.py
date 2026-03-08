@@ -72,6 +72,13 @@ class GitHubRepoScanner:
     # Precomputed set of all supported extensions for faster access
     ALL_EXTENSIONS = frozenset(ext for exts in LANGUAGE_EXTENSIONS.values() for ext in exts)
 
+    # Precomputed mapping of extension to language
+    EXTENSION_TO_LANGUAGE = {
+        ext: lang
+        for lang, extensions in LANGUAGE_EXTENSIONS.items()
+        for ext in extensions
+    }
+
     # Directories to skip during analysis
     SKIP_DIRECTORIES = {
         'node_modules', 'vendor', 'venv', '.venv', 'env', '.env',
@@ -182,12 +189,8 @@ class GitHubRepoScanner:
             return 'main'
 
     def _get_extension_to_language(self) -> Dict[str, str]:
-        """Create a mapping from file extension to language"""
-        ext_to_lang = {}
-        for lang, extensions in self.LANGUAGE_EXTENSIONS.items():
-            for ext in extensions:
-                ext_to_lang[ext] = lang
-        return ext_to_lang
+        """Get the mapping from file extension to language"""
+        return self.EXTENSION_TO_LANGUAGE
 
     def _find_code_files(self, repo_path: str, extensions: Optional[Iterable[str]] = None) -> List[Path]:
         """Find all code files in the repository"""
