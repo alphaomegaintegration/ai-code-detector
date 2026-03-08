@@ -42,83 +42,140 @@ class AICodeDetector:
     def __init__(self, max_file_size: int = 1024 * 1024):
         self.max_file_size = max_file_size
         self.ai_patterns = {
-            'verbose_naming': r'[a-z]+[A-Z][a-z]+[A-Z][a-z]+',
-            'descriptive_vars': r'(user_data|response_data|result_data|input_value|output_value)',
-            'formal_comments': r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')',
-            'type_hints': r':\s*(str|int|float|bool|List|Dict|Tuple|Optional|Union)',
+            'verbose_naming': re.compile(r'[a-z]+[A-Z][a-z]+[A-Z][a-z]+'),
+            'descriptive_vars': re.compile(r'(user_data|response_data|result_data|input_value|output_value)'),
+            'formal_comments': re.compile(r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')'),
+            'type_hints': re.compile(r':\s*(str|int|float|bool|List|Dict|Tuple|Optional|Union)'),
         }
 
         self.human_patterns = {
-            'abbreviated_vars': r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b',
-            'legacy_syntax': r'(var\s+|function\s*\(|\.prototype\.|document\.write)',
-            'informal_comments': r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)',
+            'abbreviated_vars': re.compile(r'\b(i|j|k|x|y|z|tmp|temp|val|res|arr|obj|fn|cb|idx|cnt|num|str)\b'),
+            'legacy_syntax': re.compile(r'(var\s+|function\s*\(|\.prototype\.|document\.write)'),
+            'informal_comments': re.compile(r'(#\s*TODO|#\s*FIXME|#\s*HACK|#\s*NOTE|#\s*XXX|//\s*TODO|//\s*FIXME|//\s*HACK|//\s*NOTE|//\s*XXX)'),
         }
 
         # AI-typical comment phrases (over-explanation patterns)
         self.ai_comment_phrases = [
-            r'check\s+that',
-            r'ensure\s+that',
-            r'make\s+sure',
-            r'initialize\s+the',
-            r'set\s+up\s+the',
-            r'clean\s+up\s+the',
-            r'verify\s+that',
-            r'validate\s+that',
-            r'this\s+function\s+(will|does|should)',
-            r'this\s+method\s+(will|does|should)',
-            r'the\s+following\s+(code|function|method)',
-            r'handles?\s+the\s+case',
-            r'returns?\s+the\s+result',
-            r'loop\s+through\s+(the|all|each)',
-            r'iterate\s+over\s+(the|all|each)',
-            r'should\s+be\s+initialized',
-            r'should\s+have\s+the\s+expected',
-            r'should\s+contain',
-            r'test\s+that\s+the',
+            re.compile(r'check\s+that'),
+            re.compile(r'ensure\s+that'),
+            re.compile(r'make\s+sure'),
+            re.compile(r'initialize\s+the'),
+            re.compile(r'set\s+up\s+the'),
+            re.compile(r'clean\s+up\s+the'),
+            re.compile(r'verify\s+that'),
+            re.compile(r'validate\s+that'),
+            re.compile(r'this\s+function\s+(will|does|should)'),
+            re.compile(r'this\s+method\s+(will|does|should)'),
+            re.compile(r'the\s+following\s+(code|function|method)'),
+            re.compile(r'handles?\s+the\s+case'),
+            re.compile(r'returns?\s+the\s+result'),
+            re.compile(r'loop\s+through\s+(the|all|each)'),
+            re.compile(r'iterate\s+over\s+(the|all|each)'),
+            re.compile(r'should\s+be\s+initialized'),
+            re.compile(r'should\s+have\s+the\s+expected'),
+            re.compile(r'should\s+contain'),
+            re.compile(r'test\s+that\s+the'),
         ]
 
         # Obvious comment patterns (explaining what code does, not why)
         self.obvious_comment_patterns = [
-            (r'#\s*increment\s+\w+', 'Increment variable'),
-            (r'#\s*decrement\s+\w+', 'Decrement variable'),
-            (r'#\s*initialize\s+(the\s+)?\w+', 'Initialize variable'),
-            (r'#\s*set\s+\w+\s+to', 'Set variable to'),
-            (r'#\s*return\s+(the\s+)?result', 'Return result'),
-            (r'#\s*return\s+(the\s+)?value', 'Return value'),
-            (r'#\s*loop\s+through', 'Loop through'),
-            (r'#\s*iterate\s+over', 'Iterate over'),
-            (r'#\s*check\s+if', 'Check if'),
-            (r'#\s*verify\s+that', 'Verify that'),
-            (r'#\s*create\s+(a\s+)?new', 'Create new'),
-            (r'#\s*add\s+\w+\s+to', 'Add to'),
-            (r'#\s*remove\s+\w+\s+from', 'Remove from'),
-            (r'#\s*update\s+(the\s+)?\w+', 'Update variable'),
-            (r'#\s*get\s+(the\s+)?\w+', 'Get variable'),
-            (r'#\s*set\s+(the\s+)?\w+', 'Set variable'),
-            (r'#\s*call\s+(the\s+)?\w+', 'Call function'),
-            (r'#\s*import\s+\w+', 'Import statement'),
-            (r'#\s*define\s+\w+', 'Define variable'),
-            (r'#\s*assign\s+\w+', 'Assign variable'),
-            (r'//\s*increment\s+\w+', 'Increment variable'),
-            (r'//\s*decrement\s+\w+', 'Decrement variable'),
-            (r'//\s*initialize\s+\w+', 'Initialize variable'),
-            (r'//\s*set\s+\w+\s+to', 'Set variable to'),
-            (r'//\s*return\s+(the\s+)?result', 'Return result'),
-            (r'//\s*loop\s+through', 'Loop through'),
-            (r'//\s*check\s+if', 'Check if'),
+            (re.compile(r'#\s*increment\s+\w+', re.IGNORECASE), 'Increment variable'),
+            (re.compile(r'#\s*decrement\s+\w+', re.IGNORECASE), 'Decrement variable'),
+            (re.compile(r'#\s*initialize\s+(the\s+)?\w+', re.IGNORECASE), 'Initialize variable'),
+            (re.compile(r'#\s*set\s+\w+\s+to', re.IGNORECASE), 'Set variable to'),
+            (re.compile(r'#\s*return\s+(the\s+)?result', re.IGNORECASE), 'Return result'),
+            (re.compile(r'#\s*return\s+(the\s+)?value', re.IGNORECASE), 'Return value'),
+            (re.compile(r'#\s*loop\s+through', re.IGNORECASE), 'Loop through'),
+            (re.compile(r'#\s*iterate\s+over', re.IGNORECASE), 'Iterate over'),
+            (re.compile(r'#\s*check\s+if', re.IGNORECASE), 'Check if'),
+            (re.compile(r'#\s*verify\s+that', re.IGNORECASE), 'Verify that'),
+            (re.compile(r'#\s*create\s+(a\s+)?new', re.IGNORECASE), 'Create new'),
+            (re.compile(r'#\s*add\s+\w+\s+to', re.IGNORECASE), 'Add to'),
+            (re.compile(r'#\s*remove\s+\w+\s+from', re.IGNORECASE), 'Remove from'),
+            (re.compile(r'#\s*update\s+(the\s+)?\w+', re.IGNORECASE), 'Update variable'),
+            (re.compile(r'#\s*get\s+(the\s+)?\w+', re.IGNORECASE), 'Get variable'),
+            (re.compile(r'#\s*set\s+(the\s+)?\w+', re.IGNORECASE), 'Set variable'),
+            (re.compile(r'#\s*call\s+(the\s+)?\w+', re.IGNORECASE), 'Call function'),
+            (re.compile(r'#\s*import\s+\w+', re.IGNORECASE), 'Import statement'),
+            (re.compile(r'#\s*define\s+\w+', re.IGNORECASE), 'Define variable'),
+            (re.compile(r'#\s*assign\s+\w+', re.IGNORECASE), 'Assign variable'),
+            (re.compile(r'//\s*increment\s+\w+', re.IGNORECASE), 'Increment variable'),
+            (re.compile(r'//\s*decrement\s+\w+', re.IGNORECASE), 'Decrement variable'),
+            (re.compile(r'//\s*initialize\s+\w+', re.IGNORECASE), 'Initialize variable'),
+            (re.compile(r'//\s*set\s+\w+\s+to', re.IGNORECASE), 'Set variable to'),
+            (re.compile(r'//\s*return\s+(the\s+)?result', re.IGNORECASE), 'Return result'),
+            (re.compile(r'//\s*loop\s+through', re.IGNORECASE), 'Loop through'),
+            (re.compile(r'//\s*check\s+if', re.IGNORECASE), 'Check if'),
         ]
 
         # Textbook algorithm patterns
         self.textbook_patterns = [
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)', 'range(len()) instead of enumerate'),
-            (r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)', 'Bubble sort pattern'),
-            (r'if\s+\w+\s*==\s*True', 'Explicit True comparison'),
-            (r'if\s+\w+\s*==\s*False', 'Explicit False comparison'),
-            (r'if\s+len\s*\(\s*\w+\s*\)\s*==\s*0', 'len() == 0 instead of not'),
-            (r'if\s+len\s*\(\s*\w+\s*\)\s*>\s*0', 'len() > 0 instead of truthiness'),
-            (r'(\w+)\s*=\s*\1\s*\+\s*1', 'i = i + 1 instead of i += 1'),
-            (r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]', 'Adjacent element comparison (bubble sort)'),
+            (re.compile(r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*\)'), 'range(len()) instead of enumerate'),
+            (re.compile(r'for\s+\w+\s+in\s+range\s*\(\s*len\s*\(\s*\w+\s*\)\s*-\s*1\s*\)'), 'Bubble sort pattern'),
+            (re.compile(r'if\s+\w+\s*==\s*True'), 'Explicit True comparison'),
+            (re.compile(r'if\s+\w+\s*==\s*False'), 'Explicit False comparison'),
+            (re.compile(r'if\s+len\s*\(\s*\w+\s*\)\s*==\s*0'), 'len() == 0 instead of not'),
+            (re.compile(r'if\s+len\s*\(\s*\w+\s*\)\s*>\s*0'), 'len() > 0 instead of truthiness'),
+            (re.compile(r'(\w+)\s*=\s*\1\s*\+\s*1'), 'i = i + 1 instead of i += 1'),
+            (re.compile(r'\[\s*i\s*\]\s*>\s*\[\s*i\s*\+\s*1\s*\]'), 'Adjacent element comparison (bubble sort)'),
         ]
+
+        # Precompiled inline regexes for performance
+        self._re_identifiers = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
+        self._re_control_structures = re.compile(r'\b(if|for|while|switch|case)\b')
+        self._re_try_blocks = re.compile(r'\btry\s*:')
+        self._re_except_blocks = re.compile(r'\bexcept\s+')
+        self._re_null_checks = re.compile(r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)', re.IGNORECASE)
+        self._re_docstrings = re.compile(r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'')
+        self._re_function_defs = re.compile(r'\bdef\s+\w+\s*\(')
+        self._re_class_defs = re.compile(r'\bclass\s+\w+')
+        self._re_operator_spacing = re.compile(r'\s[+\-*/=]\s')
+        self._re_total_operators = re.compile(r'[+\-*/=]')
+
+        self._re_mod_typehints = re.compile(r':\s*(str|int|float|bool|List|Dict)')
+        self._re_mod_fstrings = re.compile(r'\bf-["\']')
+        self._re_mod_await = re.compile(r'\bawait\s+')
+        self._re_mod_async_def = re.compile(r'\basync\s+def')
+        self._re_mod_with = re.compile(r'\bwith\s+\w+')
+
+        self._re_leg_var = re.compile(r'\bvar\s+')
+        self._re_leg_proto = re.compile(r'\.prototype\.')
+        self._re_leg_printf = re.compile(r'%\s*[sd]')
+
+        self._re_def_none_checks = re.compile(r'if\s+\w+\s+is\s+not\s+None')
+        self._re_def_null_checks = re.compile(r'if\s+\w+\s*!=\s*null', re.IGNORECASE)
+        self._re_def_type_checks = re.compile(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)')
+        self._re_def_try_ops = re.compile(r'try\s*:\s*\n\s*\w+\s*=')
+        self._re_def_assertions = re.compile(r'assert\s+.+')
+        self._re_def_if_conds = re.compile(r'if\s+(.+?):')
+        self._re_def_val_not = re.compile(r'if\s+not\s+\w+\s*:')
+        self._re_def_val_none = re.compile(r'if\s+\w+\s+is\s+None\s*:')
+        self._re_def_val_raise = re.compile(r'raise\s+(ValueError|TypeError|RuntimeError)')
+
+        self._re_tb_range_len = re.compile(r'range\s*\(\s*len\s*\(')
+        self._re_tb_str_concat = re.compile(r'\w+\s*\+=\s*["\']')
+        self._re_tb_append_loop = re.compile(r'for\s+.+:\s*\n\s+\w+\.append\(', re.MULTILINE)
+
+        self._re_func_pattern = re.compile(r'def\s+(\w+)\s*\(')
+
+        self._re_cons_snake = re.compile(r'\b[a-z]+_[a-z]+\b')
+        self._re_cons_camel = re.compile(r'\b[a-z]+[A-Z][a-z]+\b')
+        self._re_cons_spaced_ops = re.compile(r'\s[=+\-*/]\s')
+        self._re_cons_unspaced_ops = re.compile(r'[a-zA-Z0-9][=+\-*/][a-zA-Z0-9]')
+        self._re_cons_hash_comments = re.compile(r'^\s*#', re.MULTILINE)
+        self._re_cons_slash_comments = re.compile(r'^\s*//', re.MULTILINE)
+        self._re_cons_indent_4 = re.compile(r'^\s{4}[^\s]', re.MULTILINE)
+        self._re_cons_indent_2 = re.compile(r'^\s{2}[^\s]', re.MULTILINE)
+        self._re_cons_indent_tab = re.compile(r'^\t[^\t]', re.MULTILINE)
+
+        self._re_quirk_todo = re.compile(r'(#|//)\s*(TODO|FIXME|HACK|NOTE|XXX)', re.IGNORECASE)
+        self._re_quirk_temp = re.compile(r'\b(tmp|temp|foo|bar|baz|xxx|yyy|zzz)\b')
+        self._re_quirk_debug = re.compile(r'(console\.log|print\s*\(|debugger|System\.out\.print)')
+        self._re_quirk_comment_code_hash = re.compile(r'#\s*(if|for|while|def|class|return|import)\s')
+        self._re_quirk_comment_code_slash = re.compile(r'//\s*(if|for|while|function|class|return|import)\s')
+        self._re_quirk_magic = re.compile(r'\d+\s*#')
+        self._re_quirk_abbrev = re.compile(r'\b(cfg|ctx|env|msg|req|res|db|api|btn|img|err|fmt)\b')
+
 
     def analyze_file(self, file_path: str) -> DetectionResult:
         """Analyze a single file for AI code patterns."""
@@ -252,11 +309,11 @@ class AICodeDetector:
     def _analyze_naming_patterns(self, code: str) -> Dict[str, Any]:
         lines = [l for l in code.split('\n') if l.strip() and not l.strip().startswith('#')]
 
-        verbose_matches = len(re.findall(self.ai_patterns['verbose_naming'], code))
-        descriptive_matches = len(re.findall(self.ai_patterns['descriptive_vars'], code))
-        abbreviated_matches = len(re.findall(self.human_patterns['abbreviated_vars'], code))
+        verbose_matches = len(self.ai_patterns['verbose_naming'].findall(code))
+        descriptive_matches = len(self.ai_patterns['descriptive_vars'].findall(code))
+        abbreviated_matches = len(self.human_patterns['abbreviated_vars'].findall(code))
 
-        identifiers = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', code)
+        identifiers = self._re_identifiers.findall(code)
         avg_identifier_length = sum(len(i) for i in identifiers) / max(len(identifiers), 1)
 
         ai_score = 0.0
@@ -286,8 +343,8 @@ class AICodeDetector:
         lines = code.split('\n')
         comment_lines = [l for l in lines if l.strip().startswith('#') or l.strip().startswith('//')]
 
-        formal_comments = len(re.findall(self.ai_patterns['formal_comments'], code))
-        informal_comments = len(re.findall(self.human_patterns['informal_comments'], code))
+        formal_comments = len(self.ai_patterns['formal_comments'].findall(code))
+        informal_comments = len(self.human_patterns['informal_comments'].findall(code))
 
         code_lines = [l for l in lines if l.strip() and not l.strip().startswith('#')]
         comment_ratio = len(comment_lines) / max(len(code_lines), 1)
@@ -355,7 +412,7 @@ class AICodeDetector:
 
         avg_line_length = sum(len(l) for l in lines) / max(len(lines), 1)
 
-        control_structures = len(re.findall(r'\b(if|for|while|switch|case)\b', code))
+        control_structures = len(self._re_control_structures.findall(code))
         nesting_indicators = code.count('    if') + code.count('        if')
 
         ai_score = 0.0
@@ -377,9 +434,9 @@ class AICodeDetector:
         }
 
     def _analyze_error_handling(self, code: str) -> Dict[str, Any]:
-        try_blocks = len(re.findall(r'\btry\s*:', code))
-        except_blocks = len(re.findall(r'\bexcept\s+', code))
-        null_checks = len(re.findall(r'(if\s+\w+\s+is\s+not\s+None|if\s+\w+\s*!=\s*null)', code, re.IGNORECASE))
+        try_blocks = len(self._re_try_blocks.findall(code))
+        except_blocks = len(self._re_except_blocks.findall(code))
+        null_checks = len(self._re_null_checks.findall(code))
 
         lines = [l for l in code.split('\n') if l.strip()]
         error_handling_ratio = (try_blocks + except_blocks + null_checks) / max(len(lines), 1)
@@ -404,10 +461,10 @@ class AICodeDetector:
         }
 
     def _analyze_documentation(self, code: str) -> Dict[str, Any]:
-        docstrings = re.findall(r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'', code)
+        docstrings = self._re_docstrings.findall(code)
 
-        function_defs = len(re.findall(r'\bdef\s+\w+\s*\(', code))
-        class_defs = len(re.findall(r'\bclass\s+\w+', code))
+        function_defs = len(self._re_function_defs.findall(code))
+        class_defs = len(self._re_class_defs.findall(code))
 
         documented_ratio = len(docstrings) / max(function_defs + class_defs, 1)
 
@@ -441,8 +498,8 @@ class AICodeDetector:
             if '=' in line and 'def' not in line and 'class' not in line:
                 spacing_patterns.append('=' in line.replace('==', '').replace('!=', ''))
 
-        operator_spacing = len(re.findall(r'\s[+\-*/=]\s', code))
-        total_operators = len(re.findall(r'[+\-*/=]', code))
+        operator_spacing = len(self._re_operator_spacing.findall(code))
+        total_operators = len(self._re_total_operators.findall(code))
         spacing_consistency = operator_spacing / max(total_operators, 1)
 
         ai_score = 0.0
@@ -462,15 +519,15 @@ class AICodeDetector:
         modern_features = 0
         legacy_features = 0
 
-        modern_features += len(re.findall(r':\s*(str|int|float|bool|List|Dict)', code))
-        modern_features += len(re.findall(r'\bf-["\']', code))
-        modern_features += len(re.findall(r'\bawait\s+', code))
-        modern_features += len(re.findall(r'\basync\s+def', code))
-        modern_features += len(re.findall(r'\bwith\s+\w+', code))
+        modern_features += len(self._re_mod_typehints.findall(code))
+        modern_features += len(self._re_mod_fstrings.findall(code))
+        modern_features += len(self._re_mod_await.findall(code))
+        modern_features += len(self._re_mod_async_def.findall(code))
+        modern_features += len(self._re_mod_with.findall(code))
 
-        legacy_features += len(re.findall(r'\bvar\s+', code))
-        legacy_features += len(re.findall(r'\.prototype\.', code))
-        legacy_features += len(re.findall(r'%\s*[sd]', code))
+        legacy_features += len(self._re_leg_var.findall(code))
+        legacy_features += len(self._re_leg_proto.findall(code))
+        legacy_features += len(self._re_leg_printf.findall(code))
 
         total_features = modern_features + legacy_features
         modern_ratio = modern_features / max(total_features, 1) if total_features > 0 else 0.5
@@ -498,14 +555,14 @@ class AICodeDetector:
         for comment in comment_lines:
             comment_lower = comment.lower()
             for phrase in self.ai_comment_phrases:
-                if re.search(phrase, comment_lower):
+                if phrase.search(comment_lower):
                     ai_phrases_found.append(comment[:80])
                     break
 
         # Check for obvious comments
         for comment in comment_lines:
             for pattern, description in self.obvious_comment_patterns:
-                if re.search(pattern, comment, re.IGNORECASE):
+                if pattern.search(comment):
                     obvious_comments_found.append(f"{description}: {comment[:60]}")
                     break
 
@@ -544,41 +601,41 @@ class AICodeDetector:
         patterns_found = []
 
         # Excessive null/None checks
-        none_checks = re.findall(r'if\s+\w+\s+is\s+not\s+None', code)
-        null_checks = re.findall(r'if\s+\w+\s*!=\s*null', code, re.IGNORECASE)
+        none_checks = self._re_def_none_checks.findall(code)
+        null_checks = self._re_def_null_checks.findall(code)
         none_check_count = len(none_checks) + len(null_checks)
         if none_check_count > 0:
             patterns_found.extend([f"None check: {c[:50]}" for c in none_checks[:3]])
 
         # Redundant type checking
-        type_checks = re.findall(r'isinstance\s*\(\s*\w+\s*,\s*\w+\s*\)', code)
+        type_checks = self._re_def_type_checks.findall(code)
         type_check_count = len(type_checks)
         if type_check_count > 3:
             patterns_found.append(f"Excessive type checks: {type_check_count} isinstance calls")
 
         # Over-use of try-catch
-        try_blocks = len(re.findall(r'\btry\s*:', code))
-        simple_operations = len(re.findall(r'try\s*:\s*\n\s*\w+\s*=', code))
+        try_blocks = len(self._re_try_blocks.findall(code))
+        simple_operations = len(self._re_def_try_ops.findall(code))
         if try_blocks > 3:
             patterns_found.append(f"Many try blocks: {try_blocks}")
 
         # Redundant assertions
-        assertions = re.findall(r'assert\s+.+', code)
+        assertions = self._re_def_assertions.findall(code)
         assert_count = len(assertions)
         if assert_count > 2:
             patterns_found.append(f"Multiple assertions: {assert_count}")
 
         # Multiple validation of same condition
-        if_conditions = re.findall(r'if\s+(.+?):', code)
+        if_conditions = self._re_def_if_conds.findall(code)
         condition_counter = Counter(if_conditions)
         repeated_conditions = sum(1 for c, count in condition_counter.items() if count > 1)
         if repeated_conditions > 0:
             patterns_found.append(f"Repeated conditions: {repeated_conditions}")
 
         # Input validation patterns
-        validation_patterns = len(re.findall(r'if\s+not\s+\w+\s*:', code))
-        validation_patterns += len(re.findall(r'if\s+\w+\s+is\s+None\s*:', code))
-        validation_patterns += len(re.findall(r'raise\s+(ValueError|TypeError|RuntimeError)', code))
+        validation_patterns = len(self._re_def_val_not.findall(code))
+        validation_patterns += len(self._re_def_val_none.findall(code))
+        validation_patterns += len(self._re_def_val_raise.findall(code))
 
         lines = [l for l in code.split('\n') if l.strip()]
         defensive_ratio = (none_check_count + type_check_count + try_blocks + validation_patterns) / max(len(lines), 1)
@@ -615,7 +672,7 @@ class AICodeDetector:
         textbook_count = 0
 
         for pattern, description in self.textbook_patterns:
-            matches = re.findall(pattern, code)
+            matches = pattern.findall(code)
             if matches:
                 textbook_count += len(matches)
                 patterns_found.append(description)
@@ -624,18 +681,18 @@ class AICodeDetector:
         verbose_indicators = 0
 
         # range(len()) instead of enumerate
-        range_len = len(re.findall(r'range\s*\(\s*len\s*\(', code))
+        range_len = len(self._re_tb_range_len.findall(code))
         if range_len > 0:
             verbose_indicators += range_len
 
         # Manual string concatenation instead of join
-        string_concat = len(re.findall(r'\w+\s*\+=\s*["\']', code))
+        string_concat = len(self._re_tb_str_concat.findall(code))
         if string_concat > 2:
             verbose_indicators += 1
             patterns_found.append("String concatenation in loop")
 
         # Manual list building instead of comprehension
-        append_in_loop = len(re.findall(r'for\s+.+:\s*\n\s+\w+\.append\(', code, re.MULTILINE))
+        append_in_loop = len(self._re_tb_append_loop.findall(code))
         if append_in_loop > 2:
             verbose_indicators += append_in_loop
             patterns_found.append(f"Append in loop ({append_in_loop}x) instead of comprehension")
@@ -670,7 +727,7 @@ class AICodeDetector:
         """Detect over-modularization patterns typical of AI."""
         # Find all function definitions (handles multi-line and type hints)
         func_pattern = r'def\s+(\w+)\s*\('
-        func_matches = list(re.finditer(func_pattern, code))
+        func_matches = list(self._re_func_pattern.finditer(code))
 
         small_functions = []
         function_sizes = []
@@ -742,27 +799,27 @@ class AICodeDetector:
         lines = [l for l in code.split('\n') if l.strip()]
 
         # Check naming consistency
-        snake_case = len(re.findall(r'\b[a-z]+_[a-z]+\b', code))
-        camel_case = len(re.findall(r'\b[a-z]+[A-Z][a-z]+\b', code))
+        snake_case = len(self._re_cons_snake.findall(code))
+        camel_case = len(self._re_cons_camel.findall(code))
         total_naming = snake_case + camel_case
         naming_consistency = max(snake_case, camel_case) / max(total_naming, 1) if total_naming > 5 else 0.5
 
         # Check spacing around operators
-        spaced_ops = len(re.findall(r'\s[=+\-*/]\s', code))
-        unspaced_ops = len(re.findall(r'[a-zA-Z0-9][=+\-*/][a-zA-Z0-9]', code))
+        spaced_ops = len(self._re_cons_spaced_ops.findall(code))
+        unspaced_ops = len(self._re_cons_unspaced_ops.findall(code))
         total_ops = spaced_ops + unspaced_ops
         spacing_consistency = spaced_ops / max(total_ops, 1) if total_ops > 3 else 0.5
 
         # Check comment style consistency
-        hash_comments = len(re.findall(r'^\s*#', code, re.MULTILINE))
-        slash_comments = len(re.findall(r'^\s*//', code, re.MULTILINE))
+        hash_comments = len(self._re_cons_hash_comments.findall(code))
+        slash_comments = len(self._re_cons_slash_comments.findall(code))
         total_comments = hash_comments + slash_comments
         comment_style_consistency = max(hash_comments, slash_comments) / max(total_comments, 1) if total_comments > 2 else 0.5
 
         # Check indentation consistency (4 spaces vs tabs vs 2 spaces)
-        indent_4 = len(re.findall(r'^\s{4}[^\s]', code, re.MULTILINE))
-        indent_2 = len(re.findall(r'^\s{2}[^\s]', code, re.MULTILINE))
-        indent_tab = len(re.findall(r'^\t[^\t]', code, re.MULTILINE))
+        indent_4 = len(self._re_cons_indent_4.findall(code))
+        indent_2 = len(self._re_cons_indent_2.findall(code))
+        indent_tab = len(self._re_cons_indent_tab.findall(code))
         total_indent = indent_4 + indent_2 + indent_tab
         indent_consistency = max(indent_4, indent_2, indent_tab) / max(total_indent, 1) if total_indent > 3 else 0.5
 
@@ -803,33 +860,33 @@ class AICodeDetector:
         missing_quirks = []
 
         # Check for absence of TODO, FIXME, HACK, NOTE, XXX
-        has_todo = bool(re.search(r'(#|//)\s*(TODO|FIXME|HACK|NOTE|XXX)', code, re.IGNORECASE))
+        has_todo = bool(self._re_quirk_todo.search(code))
         if not has_todo:
             missing_quirks.append("No TODO/FIXME/HACK/NOTE/XXX comments")
 
         # Check for absence of temp variable names
-        has_temp_vars = bool(re.search(r'\b(tmp|temp|foo|bar|baz|xxx|yyy|zzz)\b', code))
+        has_temp_vars = bool(self._re_quirk_temp.search(code))
         if not has_temp_vars:
             missing_quirks.append("No temporary variable names (tmp, temp, foo, bar)")
 
         # Check for absence of debugging artifacts
-        has_debug = bool(re.search(r'(console\.log|print\s*\(|debugger|System\.out\.print)', code))
+        has_debug = bool(self._re_quirk_debug.search(code))
         if not has_debug:
             missing_quirks.append("No debugging statements (print, console.log)")
 
         # Check for absence of commented-out code
-        commented_code = re.findall(r'#\s*(if|for|while|def|class|return|import)\s', code)
-        commented_code += re.findall(r'//\s*(if|for|while|function|class|return|import)\s', code)
+        commented_code = self._re_quirk_comment_code_hash.findall(code)
+        commented_code += self._re_quirk_comment_code_slash.findall(code)
         if not commented_code:
             missing_quirks.append("No commented-out code")
 
         # Check for absence of magic numbers with comments
-        magic_with_comment = re.findall(r'\d+\s*#', code)
+        magic_with_comment = self._re_quirk_magic.findall(code)
         if not magic_with_comment:
             missing_quirks.append("No magic numbers with inline comments")
 
         # Check for presence of abbreviations
-        has_abbrevs = bool(re.search(r'\b(cfg|ctx|env|msg|req|res|db|api|btn|img|err|fmt)\b', code))
+        has_abbrevs = bool(self._re_quirk_abbrev.search(code))
         if not has_abbrevs:
             missing_quirks.append("No common abbreviations (cfg, ctx, env, msg, etc.)")
 
@@ -938,7 +995,7 @@ class AICodeDetector:
 
                 # Check for obvious patterns
                 for pattern, description in self.obvious_comment_patterns:
-                    if re.search(pattern, comment_text):
+                    if pattern.search(comment_text):
                         obvious_count += 1
                         obvious_examples.append(f"[Line {i+1}] {description}: {stripped[:70]}")
                         break
