@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 # pylint: disable=protected-access
 from github_repo_scanner import GitHubRepoScanner
 
@@ -115,6 +116,19 @@ class TestSymlinkTraversal(unittest.TestCase):
 
         self.assertIn("real.py", filenames)
         self.assertIn("link.py", filenames)
+
+class TestGetDefaultBranch(unittest.TestCase):
+    """Test suite for _get_default_branch error handling."""
+
+    def setUp(self):
+        self.scanner = GitHubRepoScanner(verbose=False)
+
+    @patch('subprocess.run')
+    def test_get_default_branch_exception(self, mock_run):
+        """Ensure _get_default_branch returns 'main' if subprocess.run raises an Exception."""
+        mock_run.side_effect = Exception("Mocked subprocess failure")
+        result = self.scanner._get_default_branch("/tmp/fake_repo")
+        self.assertEqual(result, "main", "Should return 'main' fallback on subprocess failure")
 
 if __name__ == '__main__':
     unittest.main()
