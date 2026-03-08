@@ -16,7 +16,7 @@ import tempfile
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any, Optional, Set, Iterable
 from dataclasses import dataclass, asdict
 from collections import defaultdict
 
@@ -68,6 +68,9 @@ class GitHubRepoScanner:
         'YAML': ['.yml', '.yaml'],
         'Markdown': ['.md'],
     }
+
+    # Precomputed set of all supported extensions for faster access
+    ALL_EXTENSIONS = frozenset(ext for exts in LANGUAGE_EXTENSIONS.values() for ext in exts)
 
     # Directories to skip during analysis
     SKIP_DIRECTORIES = {
@@ -186,12 +189,10 @@ class GitHubRepoScanner:
                 ext_to_lang[ext] = lang
         return ext_to_lang
 
-    def _find_code_files(self, repo_path: str, extensions: Optional[List[str]] = None) -> List[Path]:
+    def _find_code_files(self, repo_path: str, extensions: Optional[Iterable[str]] = None) -> List[Path]:
         """Find all code files in the repository"""
         if extensions is None:
-            extensions = []
-            for exts in self.LANGUAGE_EXTENSIONS.values():
-                extensions.extend(exts)
+            extensions = self.ALL_EXTENSIONS
 
         code_files = []
         repo = Path(repo_path)
