@@ -6,7 +6,7 @@ import json
 import html
 from datetime import datetime
 from dataclasses import asdict
-from typing import List, Any, Dict # pylint: disable=unused-import
+from typing import List, Any
 
 class ReportGenerator:
     """Generate reports for AI code detection analysis."""
