@@ -2,6 +2,7 @@
 # pylint: disable=fixme, trailing-whitespace, line-too-long
 # quick auth system for the app
 import hashlib
+import secrets
 from datetime import datetime
 
 class Auth:
@@ -24,8 +25,7 @@ class Auth:
 
         h = hashlib.sha256(pwd.encode()).hexdigest()
         if self.users[usr]['pwd'] == h:
-            # FIXME: use proper token generation
-            tok = str(hash(usr + str(datetime.now())))
+            tok = secrets.token_hex(16)
             self.sess[tok] = usr
             return tok
         return None
