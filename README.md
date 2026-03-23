@@ -41,7 +41,8 @@ AI Code Detector is a sophisticated analysis tool that distinguishes between hum
 
 ```bash
 # Clone or download the tool
-cd /home/ubuntu/ai_code_detector
+git clone https://github.com/alphaomegaintegration/ai-code-detector/
+cd ~/ai_code_detector
 
 # Make executable (optional)
 chmod +x ai_code_detector.py
