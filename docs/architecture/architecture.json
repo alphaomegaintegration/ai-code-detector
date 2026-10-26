@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AI Code Detector",
+    "output": "architecture.html",
+    "quality_profile": "showcase"
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      60
+    ],
+    "cols": 4,
+    "gapX": 80,
+    "gapY": 110
+  },
+  "components": [
+    {
+      "id": "cli",
+      "type": "frontend",
+      "label": "Detector CLI",
+      "sublabel": "ai_code_detector.py main",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "scanner",
+      "type": "frontend",
+      "label": "Repo scanner CLI",
+      "sublabel": "github_repo_scanner.py",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "detector",
+      "type": "backend",
+      "label": "AICodeDetector",
+      "sublabel": "dimension analyzers",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "reports",
+      "type": "backend",
+      "label": "ReportGenerator",
+      "sublabel": "report_generator.py",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "Source files",
+      "sublabel": "local files and dirs",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "git",
+      "type": "external",
+      "label": "Public Git repo",
+      "sublabel": "shallow clone",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "database",
+      "label": "Reports",
+      "sublabel": "JSON and HTML output",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "tests",
+      "type": "cloud",
+      "label": "Test suite",
+      "sublabel": "tests/ and pylint CI",
+      "row": 2,
+      "col": 2
+    }
+  ],
+  "connections": [
+    {
+      "id": "cli-det",
+      "from": "cli",
+      "to": "detector",
+      "label": "analyze",
+      "labelDy": 24
+    },
+    {
+      "id": "scan-det",
+      "from": "scanner",
+      "to": "detector",
+      "label": "per file",
+      "labelDy": 24
+    },
+    {
+      "id": "scan-git",
+      "from": "scanner",
+      "to": "git",
+      "label": "clone"
+    },
+    {
+      "id": "det-files",
+      "from": "detector",
+      "to": "files",
+      "label": "reads",
+      "labelDy": 24
+    },
+    {
+      "id": "scan-rep",
+      "from": "scanner",
+      "to": "reports",
+      "label": "results",
+      "labelDy": 24
+    },
+    {
+      "id": "rep-out",
+      "from": "reports",
+      "to": "out",
+      "label": "writes"
+    },
+    {
+      "id": "tests-det",
+      "from": "tests",
+      "to": "detector",
+      "label": "verifies",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Local analysis",
+      "items": [
+        "Heuristic scoring across several dimensions",
+        "Only repository scans reach the network"
+      ]
+    }
+  ]
+}

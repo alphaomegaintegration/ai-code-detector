@@ -1,0 +1,37 @@
+# Builds the architecture diagram from docs/architecture/architecture.json with archify
+# (https://github.com/tt-a1i/archify, pinned) and uploads it as the "architecture-diagram" artifact.
+name: architecture
+on:
+  push:
+    branches: [main, master]
+    paths: ["docs/architecture/**", ".github/workflows/architecture.yml"]
+  pull_request:
+    paths: ["docs/architecture/**", ".github/workflows/architecture.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tt-a1i/archify
+          ref: 208acba8d412335185b2056fedf54b3405df43fb   # v3.2.0
+          path: .archify
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate and render
+        run: |
+          node .archify/archify/bin/archify.mjs validate architecture docs/architecture/architecture.json --quality showcase
+          mkdir -p out
+          node .archify/archify/bin/archify.mjs render architecture docs/architecture/architecture.json out/architecture.html --quality showcase
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architecture-diagram
+          path: out/architecture.html
+          retention-days: 90

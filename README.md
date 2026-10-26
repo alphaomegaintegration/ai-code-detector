@@ -35,6 +35,15 @@ AI Code Detector is a sophisticated analysis tool that distinguishes between hum
 
 ---
 
+## Architecture and code map
+
+**Architecture diagram.** The diagram shows the detector and repository-scanner command-line tools, the shared analyzer that scores source files, the report generator that writes JSON and HTML output, and the test suite that checks the analyzer.
+- Source: [`docs/architecture/architecture.json`](docs/architecture/architecture.json) (an [archify](https://github.com/tt-a1i/archify) spec).
+- Rendered view: the `architecture` workflow builds it on every change and uploads `architecture-diagram` (open the latest run under Actions → architecture, download the artifact, open `architecture.html`).
+- Locally: `node <archify>/bin/archify.mjs deliver architecture docs/architecture/architecture.json docs/architecture/architecture.html --quality showcase --open` (or ask Claude Code to use the archify skill). The HTML is gitignored.
+
+**Knowledge graph (graphify).** `graphify-out/GRAPH_REPORT.md` (key concepts and connections) and `graphify-out/graph.html` (clickable graph) are committed ([report](graphify-out/GRAPH_REPORT.md), [graph](graphify-out/graph.html)); `graph.json` is gitignored and rebuilt with [`graphify`](https://github.com/safishamsi/graphify). Rebuild with `graphify update . && graphify cluster-only . --no-label` (code only, no LLM, nothing leaves the machine). The Graphify Labs GitHub App also runs on every push and PR in the org.
+
 ## 🚀 Quick Start
 
 ### Installation
