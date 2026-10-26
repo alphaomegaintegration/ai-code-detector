@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .DS_Store
 *_report/
+# graphify: commit only the report and the clickable graph
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/graph.html
+# archify: diagram HTML is built in CI
+docs/architecture/*.html
